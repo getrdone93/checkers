@@ -84,22 +84,18 @@
   {:playable true, :pieceHere true}
   {:playable false, :pieceHere false}]])
 
-(defn printSquare [square] 
-        (when (not (empty? square))
-          (if (square :playable)
-            (if (square :pieceHere)
-              (print "o ")
-              (print "u "))
-            (print " "))))
-
-(defn printRow [row]
-     (when (not (empty? row))
-       (printSquare (first row))
-       (printRow (rest row))))
-
 ;output the board
 (defn output [board] 
   (when (not (empty? board))
-    (printRow (first board))
+    ((fn printRow [row]
+      (when (not (empty? row))
+        ((fn printSquare [square] 
+          (when (not (empty? square))
+            (if (square :playable)
+              (if (square :pieceHere)
+                (print "O ")
+                (print "U "))
+              (print "x ")))) (first row))
+        (printRow (rest row)))) (first board))
     (println)
     (output (rest board))))

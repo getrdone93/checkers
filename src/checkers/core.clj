@@ -1,7 +1,6 @@
 (ns checkers.core)
 
-;lets write a function to define the board instead of statically defning it. true means
-;playable square, false means otherwise.  
+;dynamically generate board. (doesnt account for initial empty spots in rows 4 and 5)
 (defn genBoard [m mct n occupy res] 
   (if (< mct m)
     (genBoard m (inc mct) n (not occupy) 
@@ -11,3 +10,76 @@
     res
     )
   )
+
+;static board
+(def board [[{:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}]
+            
+ [{:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}]
+ 
+ [{:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}]
+ 
+ [{:playable true, :pieceHere false}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere false}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere false}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere false}
+  {:playable false, :pieceHere false}]
+ 
+ [{:playable false, :pieceHere false}
+  {:playable true, :pieceHere false}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere false}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere false}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere false}]
+ 
+ [{:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}]
+ 
+ [{:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}]
+ 
+ [{:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}
+  {:playable true, :pieceHere true}
+  {:playable false, :pieceHere false}]])

@@ -99,3 +99,26 @@
         (printRow (rest row)))) (first board))
     (println)
     (output (rest board))))
+
+(def upperBoundDim (dec (count board)))
+(def lowerBoundDim 0)
+
+;source and destination should be an element from the board, namely, the map element at [m n] or [x y]
+(defn validMove [source destination board] 
+  )
+
+;accepts a pair as [m n]
+(defn getElement [pair board]
+  (if (or (or (> (first pair) upperBoundDim) (< (first pair) lowerBoundDim)) 
+          (or (> (second pair) upperBoundDim (< (second pair) lowerBoundDim))))
+    ;invalid index, return nil
+    nil
+    (nth (nth board (first pair)) (second pair))))
+
+;define move function
+(defn move [source destination board] 
+  (if (validityCheck source destination)
+    ;move is valid, so enact move on board and obtain new board
+    
+    ;othwerise, do an error or something
+    ))

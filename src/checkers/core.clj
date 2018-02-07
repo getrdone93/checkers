@@ -11,7 +11,7 @@
     )
   )
 
-;static board
+;static board, entry for each row
 (def board [[{:playable false, :pieceHere false}
   {:playable true, :pieceHere true}
   {:playable false, :pieceHere false}

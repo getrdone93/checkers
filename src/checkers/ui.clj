@@ -19,4 +19,4 @@
 ;how to draw a grid on the frame?
 ;i think i just need to update the img with a grid of squares
 
-(defn frame (doto (new JFrame) (.add panel) .pack .show))
+(defn frame [] (doto (new JFrame) (.add panel) .pack .show))

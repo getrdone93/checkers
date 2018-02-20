@@ -29,8 +29,7 @@
                   (. Color black))
                 (if (zero? (mod n 2))
                   (. Color black)
-                  (. Color red)))
-            ]
+                  (. Color red)))]
         (.setColor imGraph c)
         (.fillRect imGraph x y scale scale)))
     (. g (drawImage img 0 0 nil))

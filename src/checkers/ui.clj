@@ -14,26 +14,25 @@
 
 (defn colorFrame [img g] 
   (let [imGraph (. img (getGraphics))]
-    (do 
-      (.setColor imGraph (. Color white))
-      (.fillRect imGraph 0 0 (. img (getWidth)) (. img (getHeight)))
-      (dotimes [n num-squares]
-          (let [place (mod n 8)
-                r (quot n 8)
-                x (if (zero? place)
-                    0
-                    (* place scale))
-                y (* r scale)
-                c (if (zero? (mod r 2))
-                    (if (zero? (mod n 2))
-                      (. Color red)
-                      (. Color black))
-                    (if (zero? (mod n 2))
-                      (. Color black)
-                      (. Color red)))
-                ]
-            (.setColor imGraph c)
-            (.fillRect imGraph x y scale scale))))
+    (.setColor imGraph (. Color white))
+    (.fillRect imGraph 0 0 (. img (getWidth)) (. img (getHeight)))
+    (dotimes [n num-squares]
+      (let [place (mod n 8)
+            r (quot n 8)
+            x (if (zero? place)
+                0
+                (* place scale))
+            y (* r scale)
+            c (if (zero? (mod r 2))
+                (if (zero? (mod n 2))
+                  (. Color red)
+                  (. Color black))
+                (if (zero? (mod n 2))
+                  (. Color black)
+                  (. Color red)))
+            ]
+        (.setColor imGraph c)
+        (.fillRect imGraph x y scale scale)))
     (. g (drawImage img 0 0 nil))
     (. imGraph (dispose))))
 

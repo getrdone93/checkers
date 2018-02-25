@@ -8,6 +8,8 @@
 (def scale 100)
 (def dim 80)
 (def num-squares 64)
+(def t1-color (. Color yellow))
+(def t2-color (. Color magenta))
 
 (def img (new BufferedImage (* scale dim) (* scale dim) 
                  (. BufferedImage TYPE_INT_ARGB)))
@@ -32,13 +34,17 @@
                   (. Color red)))
             circDim (/ scale 2)
             shift (/ circDim 2)
-            circRows (set (clojure.set/union (range 0 3) (range 5 8)))]
+            t1Rows (set (range 0 3))
+            t2Rows (set (range 5 8))
+            circRows (set (clojure.set/union t1Rows t2Rows))]
         (.setColor imGraph c)
         (.fillRect imGraph x y scale scale)
         (when (and (contains? circRows r) (= c (. Color black)))
           (do
-          (.setColor imGraph (. Color yellow))
-          (.fillOval imGraph (+ x shift) (+ y shift) circDim circDim)))))
+            (.setColor imGraph (if (contains? t1Rows r)
+                                 t1-color
+                                 t2-color))
+            (.fillOval imGraph (+ x shift) (+ y shift) circDim circDim)))))
     (. g (drawImage img 0 0 nil))
     (. imGraph (dispose))))
 

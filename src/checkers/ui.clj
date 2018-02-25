@@ -31,11 +31,11 @@
                   (. Color black)
                   (. Color red)))
             circDim (/ scale 2)
-            shift (/ circDim 2)]
+            shift (/ circDim 2)
+            circRows (set (clojure.set/union (range 0 3) (range 5 8)))]
         (.setColor imGraph c)
         (.fillRect imGraph x y scale scale)
-        (when (contains? 
-                (set (clojure.set/union (range 0 3) (range 5 8))) r)
+        (when (and (contains? circRows r) (= c (. Color black)))
           (do
           (.setColor imGraph (. Color yellow))
           (.fillOval imGraph (+ x shift) (+ y shift) circDim circDim)))))

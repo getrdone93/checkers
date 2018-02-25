@@ -15,7 +15,12 @@
                  (. BufferedImage TYPE_INT_ARGB)))
 
 (defn colorFrame [img g] 
-  (let [imGraph (. img (getGraphics))]
+  (let [imGraph (. img (getGraphics))
+        t1Rows (set (range 0 3))
+        t2Rows (set (range 5 8))
+        circRows (set (clojure.set/union t1Rows t2Rows))
+        circDim (/ scale 2)
+        shift (/ circDim 2)]
     (.setColor imGraph (. Color white))
     (.fillRect imGraph 0 0 (. img (getWidth)) (. img (getHeight)))
     (dotimes [n num-squares]
@@ -31,12 +36,7 @@
                   (. Color black))
                 (if (zero? (mod n 2))
                   (. Color black)
-                  (. Color red)))
-            circDim (/ scale 2)
-            shift (/ circDim 2)
-            t1Rows (set (range 0 3))
-            t2Rows (set (range 5 8))
-            circRows (set (clojure.set/union t1Rows t2Rows))]
+                  (. Color red)))]
         (.setColor imGraph c)
         (.fillRect imGraph x y scale scale)
         (when (and (contains? circRows r) (= c (. Color black)))

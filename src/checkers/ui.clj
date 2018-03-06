@@ -57,4 +57,8 @@
                                      (/ (* scale dim) 5) 
                                      (/ (* scale dim) 5)))))
 
-(defn frame [] (doto (new JFrame) (.add panel) .pack .show))
+(defn frame [] (doto 
+                 (new JFrame) 
+                 (.add panel) 
+                 .pack 
+                 .show))

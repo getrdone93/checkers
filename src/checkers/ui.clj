@@ -3,7 +3,8 @@
 (import 
  '(java.awt Color Graphics Dimension BorderLayout)
  '(java.awt.image BufferedImage)
- '(javax.swing JPanel JFrame))
+ '(javax.swing JPanel JFrame JTextArea)
+ '(java.awt.event MouseAdapter MouseEvent))
 
 (def scale 100)
 (def dim 80)
@@ -48,6 +49,12 @@
     (. g (drawImage img 0 0 nil))
     (. imGraph (dispose))))
 
+(def ml (doto (proxy [MouseAdapter] []
+                (mouseClicked [mouse-event] (print "clicked something")))))
+
+(def text-area (doto (new JTextArea)
+                 (.addMouseListener ml)))
+
 ;proxy implements/extends a interface/class where the supplied arguments
 ;are arguments to the class's super constructor and then calls
 ;the supplied functions
@@ -59,6 +66,8 @@
 
 (defn frame [] (doto 
                  (new JFrame) 
-                 (.add panel) 
+                 (-> (.getContentPane) (.add text-area))
+                 (.add panel)
                  .pack 
                  .show))
+  

@@ -49,8 +49,9 @@
     (. g (drawImage img 0 0 nil))
     (. imGraph (dispose))))
 
-(def ml (doto (proxy [MouseAdapter] []
-                (mouseClicked [mouse-event] (print "clicked something")))))
+(def ml (proxy [MouseAdapter] []
+          (mouseClicked [mouse-event] 
+            (spit "output.txt" "clicked something\n" :append true))))
 
 (def text-area (doto (new JTextArea)
                  (.addMouseListener ml)))
@@ -62,12 +63,12 @@
                         (paint [g] (colorFrame img g)))
              (.setPreferredSize (new Dimension 
                                      (/ (* scale dim) 5) 
-                                     (/ (* scale dim) 5)))))
+                                     (/ (* scale dim) 5)))
+             (.addMouseListener ml)))
 
 (defn frame [] (doto 
                  (new JFrame) 
-                 (-> (.getContentPane) (.add text-area))
-                 (.add panel)
+                 (-> (.getContentPane) (.add panel))
                  .pack 
                  .show))
   

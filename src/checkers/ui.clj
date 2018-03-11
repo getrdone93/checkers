@@ -54,29 +54,6 @@
     (. g (drawImage img 0 0 nil))
     (. imGraph (dispose))))
 
-(defn color-frame [img g]
-  (let [im-graph (. img (getGraphics))]
-       (.setColor im-graph (. Color white))
-       (.fillRect im-graph 0 0 (. img (getWidth)) (. img (getHeight)))
-       #((fn draw-board [b]
-          (let [square ((first board) :square)
-                checker ((first board) :checker)
-                cx (first (checker :point))
-                cy (second (checker :point))
-                sqx (first (square :point))
-                sqy (second (square :point))]
-	          (when (not (empty? b))     
-	            (.setColor im-graph (((first board) :square) :color))
-              (.fillRect im-graph sqx sqy scale scale)
-              (when (= (square :color) (. Color black))
-                (.setColor im-graph (checker :color))
-                (.fillOval im-graph cx cy circ-dim circ-dim)))
-           (draw-board (rest b)))) board)
-       (. g (drawImage img 0 0 nil))
-       (. im-graph (dispose))))
-
-(def board (gen-board 0 []))
-
 (defn gen-board [n br]
                 (let [place (mod n 8)
                       r (quot n 8)
@@ -100,6 +77,29 @@
                                                                      t1-color
                                                                      t2-color)}}))
                     br)))
+
+(def board (gen-board 0 []))
+
+(defn color-frame [img g]
+  (let [im-graph (. img (getGraphics))]
+       (.setColor im-graph (. Color white))
+       (.fillRect im-graph 0 0 (. img (getWidth)) (. img (getHeight)))
+       #((fn draw-board [b]
+          (let [square ((first board) :square)
+                checker ((first board) :checker)
+                cx (first (checker :point))
+                cy (second (checker :point))
+                sqx (first (square :point))
+                sqy (second (square :point))]
+	          (when (not (empty? b))     
+	            (.setColor im-graph (((first board) :square) :color))
+              (.fillRect im-graph sqx sqy scale scale)
+              (when (= (square :color) (. Color black))
+                (.setColor im-graph (checker :color))
+                (.fillOval im-graph cx cy circ-dim circ-dim)))
+           (draw-board (rest b)))) board)
+       (. g (drawImage img 0 0 nil))
+       (. im-graph (dispose))))
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 

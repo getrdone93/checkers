@@ -96,8 +96,8 @@
             (.fillRect im-graph sqx sqy scale scale)
             (when (= (square :color) (. Color black))
               (.setColor im-graph (checker :color))
-              (.fillOval im-graph cx cy circ-dim circ-dim)))
-          (draw-board (rest b)))) board)
+              (.fillOval im-graph cx cy circ-dim circ-dim))
+            (draw-board (rest b))))) board)
        (. g (drawImage img 0 0 nil))
        (. im-graph (dispose))))
 

@@ -42,7 +42,8 @@
                                                             :color (cond 
                                                                      (contains? t1-rows r) t1-color
                                                                      (contains? t2-rows r) t2-color
-                                                                     :else nil)}}))
+                                                                     :else nil)
+                                                            :valid-click-locs []}}))
                     br)))
 
 (def board (gen-board 0 []))

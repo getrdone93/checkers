@@ -3,6 +3,7 @@
 (import 
  '(java.awt Color Graphics Dimension BorderLayout)
  '(java.awt.image BufferedImage)
+ '(java.awt.geom Rectangle2D$Double Ellipse2D$Double)
  '(javax.swing JPanel JFrame JTextArea)
  '(java.awt.event MouseAdapter MouseEvent))
 
@@ -33,17 +34,21 @@
                             (. Color black))
                           (if (zero? (mod n 2))
                             (. Color black)
-                            (. Color red)))]
+                            (. Color red)))
+                      cx (+ x shift)
+                      cy (+ y shift)]
                   (if (< n num-squares)
                     (gen-board (inc n) (conj br {:square {:point [x y]
                                                            :color c
-                                                           :valid-click-locs []}
-                                                  :checker {:point [(+ x shift) (+ y shift)]
+                                                           :valid-click-locs []
+                                                           :rectangle (new Rectangle2D$Double x y scale scale)}
+                                                  :checker {:point [cx cy]
                                                             :color (cond 
                                                                      (contains? t1-rows r) t1-color
                                                                      (contains? t2-rows r) t2-color
                                                                      :else nil)
-                                                            :valid-click-locs []}}))
+                                                            :valid-click-locs []
+                                                            :circle (new Ellipse2D$Double cx cy circ-dim circ-dim)}}))
                     br)))
 
 (def board (gen-board 0 []))

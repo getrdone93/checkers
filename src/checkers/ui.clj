@@ -1,7 +1,7 @@
 (ns ui.core)
 
 (import 
- '(java.awt Color Graphics Dimension BorderLayout)
+ '(java.awt Color Graphics Dimension BorderLayout Shape)
  '(java.awt.image BufferedImage)
  '(java.awt.geom Rectangle2D$Double Ellipse2D$Double)
  '(javax.swing JPanel JFrame JTextArea)
@@ -76,7 +76,22 @@
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
-            (spit "output.txt" "clicked something\n" :append true))))
+            (let [contains-point (fn [o x y] (. o (contains x y)))
+                  shape-cast (fn [x] (cast Shape x))
+                  squares (map shape-cast (map (map :rectangle (map :square board))))
+                  checkers (map shape-cast(map :circle (map :checker board)))]
+              (if (map contains-point ))
+              
+              )
+            )
+          
+          ))
+
+;i guess this a way to do it...
+(map 
+  (fn [x] (. x (contains 1 1))) (map (fn [x] (cast Shape x)) 
+                                     (map :rectangle 
+                                          (map :square board))))
 
 ;proxy implements/extends a interface/class where the supplied arguments
 ;are arguments to the class's super constructor and then calls

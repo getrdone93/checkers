@@ -76,18 +76,23 @@
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
-            (let [contains-point (fn [o x y] (. o (contains x y)))
+            (let [mex (. mouse-event (getX))
+                  mey (. mouse-event (getY))
+                  contains-point (fn [o x y] (. o (contains x y)))
                   shape-cast (fn [x] (cast Shape x))
-                  squares (map shape-cast (map (map :rectangle (map :square board))))
-                  checkers (map shape-cast(map :circle (map :checker board)))]
-              (if (map contains-point ))
-              
+                  squares (map shape-cast (map :rectangle (map :square board)))
+                  checkers (map shape-cast (map :circle (map :checker board)))]
+              (cond 
+                (filter true? (map #(contains-point %1 mex mey) squares)) (println "you clicked a square")
+                (filter true? (map #(contains-point %1 mex mey) checkers)) (println "you clicked a square")
+                :else (println "I don't know what you clicked")
+                )
               )
             )
           
           ))
 
-;i guess this a way to do it...
+;i guess this is a way to do it...
 (map 
   (fn [x] (. x (contains 1 1))) (map (fn [x] (cast Shape x)) 
                                      (map :rectangle 

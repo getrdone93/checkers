@@ -48,7 +48,8 @@
                                                                      (contains? t2-rows r) t2-color
                                                                      :else nil)
                                                             :valid-click-locs []
-                                                            :circle (new Ellipse2D$Double cx cy circ-dim circ-dim)}}))
+                                                            :circle (when (contains? checker-rows r)
+                                                                      (new Ellipse2D$Double cx cy circ-dim circ-dim))}}))
                     br)))
 
 (def board (gen-board 0 []))
@@ -83,20 +84,9 @@
                   squares (map shape-cast (map :rectangle (map :square board)))
                   checkers (map shape-cast (map :circle (map :checker board)))]
               (cond 
-                (filter true? (map #(contains-point %1 mex mey) squares)) (println "you clicked a square")
-                (filter true? (map #(contains-point %1 mex mey) checkers)) (println "you clicked a square")
-                :else (println "I don't know what you clicked")
-                )
-              )
-            )
-          
-          ))
-
-;i guess this is a way to do it...
-(map 
-  (fn [x] (. x (contains 1 1))) (map (fn [x] (cast Shape x)) 
-                                     (map :rectangle 
-                                          (map :square board))))
+                (filter true? (map #(contains-point %1 mex mey) checkers)) (spit "output.txt" (str "circle: " mex " " mey "\n") :append true)
+                (filter true? (map #(contains-point %1 mex mey) squares)) (spit "output.txt" (str "square: " mex " " mey "\n") :append true)
+                :else (spit "output.txt" "idk what you clicked bruh\n" :append true))))))
 
 ;proxy implements/extends a interface/class where the supplied arguments
 ;are arguments to the class's super constructor and then calls

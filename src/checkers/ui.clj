@@ -48,7 +48,7 @@
                                                                      (contains? t2-rows r) t2-color
                                                                      :else nil)
                                                             :valid-click-locs []
-                                                            :circle (when (contains? checker-rows r)
+                                                            :circle (when (and (contains? checker-rows r) (= c (. Color black)))
                                                                       (new Ellipse2D$Double cx cy circ-dim circ-dim))}}))
                     br)))
 

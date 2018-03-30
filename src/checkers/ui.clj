@@ -81,8 +81,8 @@
                   mey (. mouse-event (getY))
                   contains-point (fn [o x y] (. o (contains x y)))
                   shape-cast (fn [x] (cast Shape x))
-                  squares (filter some? (map shape-cast (map :rectangle (map :square board))))
-                  checkers (filter some? (map shape-cast (map :circle (map :checker board))))]
+                  squares (map shape-cast (filter some? (map :rectangle (map :square board))))
+                  checkers (map shape-cast (filter some? (map :circle (map :checker board))))]
               (cond 
                 (reduce #(or %1 %2) (map #(contains-point %1 mex mey) checkers)) 
                    (spit "output.txt" (str "circle: " mex " " mey "\n") :append true)

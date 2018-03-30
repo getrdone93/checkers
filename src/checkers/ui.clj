@@ -79,15 +79,17 @@
           (mouseClicked [mouse-event] 
             (let [mex (. mouse-event (getX))
                   mey (. mouse-event (getY))
-                  contains-point (fn [o x y] (. o (contains x y)))
+                  contains-point (fn [o x y] 
+                                   (when (. o (contains x y))
+                                     o))
                   shape-cast (fn [x] (cast Shape x))
                   squares (map shape-cast (filter some? (map :rectangle (map :square board))))
-                  checkers (map shape-cast (filter some? (map :circle (map :checker board))))]
+                  checkers (map shape-cast (filter some? (map :circle (map :checker board))))
+                  click-cir (first (filter some? (map #(contains-point %1 mex mey) checkers)))
+                  click-sq (first (filter some? (map #(contains-point %1 mex mey) squares)))]
               (cond 
-                (reduce #(or %1 %2) (map #(contains-point %1 mex mey) checkers)) 
-                   (spit "output.txt" (str "circle: " mex " " mey "\n") :append true)
-                (reduce #(or %1 %2) (map #(contains-point %1 mex mey) squares)) 
-                   (spit "output.txt" (str "square: " mex " " mey "\n") :append true)
+                 (some? click-cir) (spit "output.txt" (str "circle: " mex " " mey "\n") :append true)
+                 (some? click-sq) (spit "output.txt" (str "square: " mex " " mey "\n") :append true)
                 :else (spit "output.txt" "idk what you clicked bruh\n" :append true))))))
 
 ;proxy implements/extends a interface/class where the supplied arguments

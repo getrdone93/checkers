@@ -75,6 +75,8 @@
        (. g (drawImage img 0 0 nil))
        (. im-graph (dispose))))
 
+(def current-checker (atom nil))
+
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
             (let [mex (. mouse-event (getX))
@@ -87,10 +89,14 @@
                   checkers (map shape-cast (filter some? (map :circle (map :checker board))))
                   click-cir (first (filter some? (map #(contains-point %1 mex mey) checkers)))
                   click-sq (first (filter some? (map #(contains-point %1 mex mey) squares)))]
-              (cond 
-                 (some? click-cir) (spit "output.txt" (str "circle: " mex " " mey "\n") :append true)
-                 (some? click-sq) (spit "output.txt" (str "square: " mex " " mey "\n") :append true)
-                :else (spit "output.txt" "idk what you clicked bruh\n" :append true))))))
+              (do 
+                (when (some? click-cir)
+                  
+                  (reset! current-checker click-cir))
+                (cond 
+                   (some? click-cir) (spit "output.txt" (str "circle: " mex " " mey "\n") :append true)
+                   (some? click-sq) (spit "output.txt" (str "square: " mex " " mey "\n") :append true)
+                  :else (spit "output.txt" "idk what you clicked bruh\n" :append true)))))))
 
 ;proxy implements/extends a interface/class where the supplied arguments
 ;are arguments to the class's super constructor and then calls

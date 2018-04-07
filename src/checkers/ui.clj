@@ -54,8 +54,10 @@
 
 (def board (gen-board 0 []))
 
-(defn color-frame [img g]
-  (let [im-graph (. img (getGraphics))]
+(defn color-frame [g]
+  (let [img (new BufferedImage (* scale dim) (* scale dim) 
+                 (. BufferedImage TYPE_INT_ARGB))
+        im-graph (. img (getGraphics))]
        (.setColor im-graph (. Color white))
        (.fillRect im-graph 0 0 (. img (getWidth)) (. img (getHeight)))
        ((fn draw-board [b]
@@ -75,8 +77,6 @@
        (. g (drawImage img 0 0 nil))
        (. im-graph (dispose))))
 
-(def current-checker (atom nil))
-
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
             (let [mex (. mouse-event (getX))
@@ -91,8 +91,8 @@
                   click-sq (first (filter some? (map #(contains-point %1 mex mey) squares)))]
               (do 
                 (when (some? click-cir)
-                  
-                  (reset! current-checker click-cir))
+                  ;this needs to operate on board and then call repaint
+                  )
                 (cond 
                    (some? click-cir) (spit "output.txt" (str "circle: " mex " " mey "\n") :append true)
                    (some? click-sq) (spit "output.txt" (str "square: " mex " " mey "\n") :append true)
@@ -102,7 +102,7 @@
 ;are arguments to the class's super constructor and then calls
 ;the supplied functions
 (def panel (doto (proxy [JPanel] []
-                        (paint [g] (color-frame img g)))
+                        (paint [g] (color-frame g)))
              (.setPreferredSize (new Dimension 
                                      (/ (* scale dim) 5) 
                                      (/ (* scale dim) 5)))

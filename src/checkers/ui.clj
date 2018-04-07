@@ -49,10 +49,11 @@
                                                                      :else nil)
                                                             :valid-click-locs []
                                                             :circle (when (and (contains? checker-rows r) (= c (. Color black)))
-                                                                      (new Ellipse2D$Double cx cy circ-dim circ-dim))}}))
+                                                                      (new Ellipse2D$Double cx cy circ-dim circ-dim))
+                                                            :clicked false}}))
                     br)))
 
-(def board (gen-board 0 []))
+(def board (atom (gen-board 0 [])))
 
 (defn color-frame [g]
   (let [img (new BufferedImage (* scale dim) (* scale dim) 
@@ -84,8 +85,12 @@
                   contains-point (fn [o x y] 
                                    (when (. o (contains x y))
                                      o))
-                  shape-cast (fn [x] (cast Shape x))
-                  squares (map shape-cast (filter some? (map :rectangle (map :square board))))
+                  ;shape-cast (fn [x] (cast Shape x))
+                  find-obj (fn [x key] (let [shape (cast Shape x)]
+                                         (when (contains-point (x key) mex mey)
+                                           x)))
+                  ;squares (map shape-cast (filter some? (map :rectangle (map :square board))))
+                  squares (map #(find-obj %1 :square) (map :square board))
                   checkers (map shape-cast (filter some? (map :circle (map :checker board))))
                   click-cir (first (filter some? (map #(contains-point %1 mex mey) checkers)))
                   click-sq (first (filter some? (map #(contains-point %1 mex mey) squares)))]
@@ -93,13 +98,14 @@
                 (when (some? click-cir)
                   ;this needs to operate on board and then call repaint
                   )
+                ()
                 (cond 
                    (some? click-cir) (spit "output.txt" (str "circle: " mex " " mey "\n") :append true)
                    (some? click-sq) (spit "output.txt" (str "square: " mex " " mey "\n") :append true)
                   :else (spit "output.txt" "idk what you clicked bruh\n" :append true)))))))
 
 ;proxy implements/extends a interface/class where the supplied arguments
-;are arguments to the class's super constructor and then calls
+;are arguments to the class' super constructor and then calls
 ;the supplied functions
 (def panel (doto (proxy [JPanel] []
                         (paint [g] (color-frame g)))

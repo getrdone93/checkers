@@ -13,6 +13,7 @@
 (def t1-color (. Color yellow))
 (def t2-color (. Color magenta))
 (def circ-dim (/ scale 2))
+(def circ-hl (+ circ-dim 5))
 (def shift (/ circ-dim 2))
 (def t1-rows (set (range 0 3)))
 (def t2-rows (set (range 5 8)))
@@ -72,37 +73,14 @@
               (.setColor im-graph (square :color))
               (.fillRect im-graph sqx sqy scale scale)
               (when (and (= (square :color) (. Color black)) (some? (checker :color)))
+                (when (checker :clicked)
+                  (.setColor im-graph (. Color green))
+                  (.fillOval im-graph cx cy circ-hl circ-hl))
                 (.setColor im-graph (checker :color))
                 (.fillOval im-graph cx cy circ-dim circ-dim)))
-            (draw-board (rest b)))) board)
+            (draw-board (rest b)))) @board)
        (. g (drawImage img 0 0 nil))
        (. im-graph (dispose))))
-
-(def ml (proxy [MouseAdapter] []
-          (mouseClicked [mouse-event] 
-            (let [mex (. mouse-event (getX))
-                  mey (. mouse-event (getY))
-                  contains-point (fn [o x y] 
-                                   (when (. o (contains x y))
-                                     o))
-                  ;shape-cast (fn [x] (cast Shape x))
-                  find-obj (fn [x key] (let [shape (cast Shape x)]
-                                         (when (contains-point (x key) mex mey)
-                                           x)))
-                  ;squares (map shape-cast (filter some? (map :rectangle (map :square board))))
-                  squares (map #(find-obj %1 :square) (map :square board))
-                  checkers (map shape-cast (filter some? (map :circle (map :checker board))))
-                  click-cir (first (filter some? (map #(contains-point %1 mex mey) checkers)))
-                  click-sq (first (filter some? (map #(contains-point %1 mex mey) squares)))]
-              (do 
-                (when (some? click-cir)
-                  ;this needs to operate on board and then call repaint
-                  )
-                ()
-                (cond 
-                   (some? click-cir) (spit "output.txt" (str "circle: " mex " " mey "\n") :append true)
-                   (some? click-sq) (spit "output.txt" (str "square: " mex " " mey "\n") :append true)
-                  :else (spit "output.txt" "idk what you clicked bruh\n" :append true)))))))
 
 ;proxy implements/extends a interface/class where the supplied arguments
 ;are arguments to the class' super constructor and then calls
@@ -114,9 +92,25 @@
                                      (/ (* scale dim) 5)))
              (.addMouseListener ml)))
 
+(def ml (proxy [MouseAdapter] []
+          (mouseClicked [mouse-event] 
+            (let [mex (. mouse-event (getX))
+                  mey (. mouse-event (getY))
+                  find-obj (fn [x key] (when (some? (x key))
+                                         (let [shape (cast Shape (x key))]
+                                           (when (. shape (contains mex mey))
+                                             x))))
+                  square (first (filter some? (map #(find-obj %1 :rectangle) (map :square @board)))) 
+                  checker (first (filter some? (map #(find-obj %1 :circle) (map :checker @board))))]
+              (do 
+                (when (some? checker)
+                 ;(reset! board (assoc @board :checker (assoc checker :clicked true)))
+                  ;(. panel (repaint))
+                  
+                  ))))))
+
 (defn frame [] (doto 
                  (new JFrame) 
                  (-> (.getContentPane) (.add panel))
                  .pack 
                  .show))
-  

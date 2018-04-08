@@ -102,12 +102,14 @@
                                              x))))
                   square (first (filter some? (map #(find-obj %1 :rectangle) (map :square @board)))) 
                   checker (first (filter some? (map #(find-obj %1 :circle) (map :checker @board))))]
-              (do 
-                (when (some? checker)
+              (do
+                (+ 1 1)
+                ;(when (some? checker)
                  ;(reset! board (assoc @board :checker (assoc checker :clicked true)))
                   ;(. panel (repaint))
                   
-                  ))))))
+                ;  )
+                )))))
 
 (defn frame [] (doto 
                  (new JFrame) 

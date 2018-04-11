@@ -82,6 +82,24 @@
        (. g (drawImage img 0 0 nil))
        (. im-graph (dispose))))
 
+(def ml (proxy [MouseAdapter] []
+          (mouseClicked [mouse-event] 
+            (let [mex (. mouse-event (getX))
+                  mey (. mouse-event (getY))
+                  find-obj (fn [x y key] (when (some? (y key))
+                                           (let [shape (cast Shape (y key))]
+                                             (when (. shape (contains mex mey))
+                                               [x y]))))
+                 
+                  checker (first (filter some? (map-indexed #(find-obj %1 %2 :circle) (filter some? (map :checker @board)))))]
+                (when (some? checker)
+                  ;losing the square here!!
+                  (reset! board (assoc @board (first checker) (assoc (@board (first checker)) :checker 
+                                                                     (assoc (second checker) :clicked true))))
+                  (. panel (repaint)))
+                ))
+          ))
+
 ;proxy implements/extends a interface/class where the supplied arguments
 ;are arguments to the class' super constructor and then calls
 ;the supplied functions
@@ -91,25 +109,6 @@
                                      (/ (* scale dim) 5) 
                                      (/ (* scale dim) 5)))
              (.addMouseListener ml)))
-
-(def ml (proxy [MouseAdapter] []
-          (mouseClicked [mouse-event] 
-            (let [mex (. mouse-event (getX))
-                  mey (. mouse-event (getY))
-                  find-obj (fn [x key] (when (some? (x key))
-                                         (let [shape (cast Shape (x key))]
-                                           (when (. shape (contains mex mey))
-                                             x))))
-                  square (first (filter some? (map #(find-obj %1 :rectangle) (map :square @board)))) 
-                  checker (first (filter some? (map #(find-obj %1 :circle) (map :checker @board))))]
-              (do
-                (+ 1 1)
-                ;(when (some? checker)
-                 ;(reset! board (assoc @board :checker (assoc checker :clicked true)))
-                  ;(. panel (repaint))
-                  
-                ;  )
-                )))))
 
 (defn frame [] (doto 
                  (new JFrame) 

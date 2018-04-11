@@ -93,11 +93,10 @@
                  
                   checker (first (filter some? (map-indexed #(find-obj %1 %2 :circle) (filter some? (map :checker @board)))))]
                 (when (some? checker)
-                  ;losing the square here!!
                   (reset! board (assoc @board (first checker) (assoc (@board (first checker)) :checker 
                                                                      (assoc (second checker) :clicked true))))
-                  (. panel (repaint)))
-                ))
+                  (. panel (repaint)) ;gonna need to add this somewheres else
+                  )))
           ))
 
 ;proxy implements/extends a interface/class where the supplied arguments

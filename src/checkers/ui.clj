@@ -13,14 +13,13 @@
 (def t1-color (. Color yellow))
 (def t2-color (. Color magenta))
 (def circ-dim (/ scale 2))
-(def circ-hl (+ circ-dim 5))
+(def circ-hl (+ circ-dim 9))
 (def shift (/ circ-dim 2))
 (def t1-rows (set (range 0 3)))
 (def t2-rows (set (range 5 8)))
 (def checker-rows (clojure.set/union t1-rows t2-rows))
 
-(def img (new BufferedImage (* scale dim) (* scale dim) 
-                 (. BufferedImage TYPE_INT_ARGB)))
+(defn hl-shift [cp] (- cp 4))
 
 (defn gen-board [n br]
                 (let [place (mod n 8)
@@ -75,7 +74,7 @@
               (when (and (= (square :color) (. Color black)) (some? (checker :color)))
                 (when (checker :clicked)
                   (.setColor im-graph (. Color green))
-                  (.fillOval im-graph cx cy circ-hl circ-hl))
+                  (.fillOval im-graph (hl-shift cx) (hl-shift cy) circ-hl circ-hl))
                 (.setColor im-graph (checker :color))
                 (.fillOval im-graph cx cy circ-dim circ-dim)))
             (draw-board (rest b)))) @board)

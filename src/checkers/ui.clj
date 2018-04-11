@@ -81,6 +81,15 @@
        (. g (drawImage img 0 0 nil))
        (. im-graph (dispose))))
 
+;proxy implements/extends a interface/class where the supplied arguments
+;are arguments to the class' super constructor and then calls
+;the supplied functions
+(def panel (doto (proxy [JPanel] []
+                        (paint [g] (color-frame g)))
+             (.setPreferredSize (new Dimension 
+                                     (/ (* scale dim) 5) 
+                                     (/ (* scale dim) 5)))))
+
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
             (let [mex (. mouse-event (getX))
@@ -94,22 +103,10 @@
                 (when (some? checker)
                   (reset! board (assoc @board (first checker) (assoc (@board (first checker)) :checker 
                                                                      (assoc (second checker) :clicked true))))
-                  (. panel (repaint)) ;gonna need to add this somewheres else
-                  )))
-          ))
-
-;proxy implements/extends a interface/class where the supplied arguments
-;are arguments to the class' super constructor and then calls
-;the supplied functions
-(def panel (doto (proxy [JPanel] []
-                        (paint [g] (color-frame g)))
-             (.setPreferredSize (new Dimension 
-                                     (/ (* scale dim) 5) 
-                                     (/ (* scale dim) 5)))
-             (.addMouseListener ml)))
+                  (. panel (repaint)))))))
 
 (defn frame [] (doto 
                  (new JFrame) 
-                 (-> (.getContentPane) (.add panel))
+                 (-> (.getContentPane) (.add panel) (.addMouseListener ml))
                  .pack 
                  .show))

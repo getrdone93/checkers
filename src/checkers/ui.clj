@@ -99,6 +99,7 @@
                                              (when (. shape (contains mex mey))
                                                [x y]))))
                  
+                  square (first (filter some? (map-indexed #(find-obj %1 %2 :rectangle) (filter some? (map :square @board)))))
                   checker (first (filter some? (map-indexed #(find-obj %1 %2 :circle) (filter some? (map :checker @board)))))]
                 (when (some? checker)
                   (reset! board (assoc @board (first checker) (assoc (@board (first checker)) :checker 

@@ -98,13 +98,19 @@
                                            (let [shape (cast Shape (y key))]
                                              (when (. shape (contains mex mey))
                                                [x y]))))
-                 
+                  ;why do i have to filter some on map :square @board?
                   square (first (filter some? (map-indexed #(find-obj %1 %2 :rectangle) (filter some? (map :square @board)))))
-                  checker (first (filter some? (map-indexed #(find-obj %1 %2 :circle) (filter some? (map :checker @board)))))]
+                  checker (first (filter some? (map-indexed #(find-obj %1 %2 :circle) (filter some? (map :checker @board)))))
+                  current (first (filter some? (map-indexed (fn [x y] 
+                                             (when (true? ((y :checker) :clicked))
+                                               [x (y :checker)])) @board)))]
+               (when (some? current)
+                  (reset! board (assoc @board (first current) (assoc (@board (first current)) :checker 
+                                                                 (assoc (second current) :clicked false)))))
                 (when (some? checker)
                   (reset! board (assoc @board (first checker) (assoc (@board (first checker)) :checker 
-                                                                     (assoc (second checker) :clicked true))))
-                  (. panel (repaint)))))))
+                                                                     (assoc (second checker) :clicked true)))))
+                (. panel (repaint))))))
 
 (defn frame [] (doto 
                  (new JFrame) 

@@ -97,7 +97,6 @@
                                  (when (and (some? (ele key)) (some? ((ele key) shapeKey)) 
                                             (. (cast Shape ((ele key) shapeKey)) (contains mex mey)))
                                        [index ele]))
-                  
                   square (first (filter some? (map-indexed #(find-clicked %1 %2 :square :rectangle) @board)))
                   checker (first (filter some? (map-indexed #(find-clicked %1 %2 :checker :circle) @board)))
                   curr-clicked (first (filter some? (map-indexed (fn [index ele] 

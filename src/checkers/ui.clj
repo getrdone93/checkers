@@ -42,16 +42,15 @@
                                                            :color c
                                                            :valid-click-locs []
                                                            :rectangle (new Rectangle2D$Double x y scale scale)}
-                                                  :checker {:point [cx cy]
-                                                            :color (cond 
-                                                                     (contains? t1-rows r) t1-color
-                                                                     (contains? t2-rows r) t2-color
-                                                                     :else nil)
-                                                            :valid-click-locs []
-                                                            :circle (when (and (contains? checker-rows r) (= c (. Color black)))
-                                                                      (new Ellipse2D$Double cx cy circ-dim circ-dim))
-                                                            :clicked false}}))
-                    br)))
+                                                 :checker (when (and (contains? checker-rows r) (= c (. Color black)))
+                                                            {:point [cx cy]
+                                                             :color (cond 
+                                                                      (contains? t1-rows r) t1-color
+                                                                      (contains? t2-rows r) t2-color
+                                                                      :else nil)
+                                                             :valid-click-locs []
+                                                             :circle (new Ellipse2D$Double cx cy circ-dim circ-dim)
+                                                             :clicked false})})) br)))
 
 (def board (atom (gen-board 0 [])))
 
@@ -65,18 +64,18 @@
           (when (not (empty? b))  
             (let [square ((first b) :square)
                checker ((first b) :checker)
-               cx (first (checker :point))
-               cy (second (checker :point))
                sqx (first (square :point))
                sqy (second (square :point))]
               (.setColor im-graph (square :color))
               (.fillRect im-graph sqx sqy scale scale)
-              (when (and (= (square :color) (. Color black)) (some? (checker :color)))
-                (when (checker :clicked)
-                  (.setColor im-graph (. Color green))
-                  (.fillOval im-graph (hl-shift cx) (hl-shift cy) circ-hl circ-hl))
-                (.setColor im-graph (checker :color))
-                (.fillOval im-graph cx cy circ-dim circ-dim)))
+              (when (and (= (square :color) (. Color black)) (some? checker) (some? (checker :color)))
+                (let [cx (first (checker :point))
+                      cy (second (checker :point))]
+                  (when (checker :clicked)
+                    (.setColor im-graph (. Color green))
+                    (.fillOval im-graph (hl-shift cx) (hl-shift cy) circ-hl circ-hl))
+                  (.setColor im-graph (checker :color))
+                  (.fillOval im-graph cx cy circ-dim circ-dim))))
             (draw-board (rest b)))) @board)
        (. g (drawImage img 0 0 nil))
        (. im-graph (dispose))))
@@ -94,22 +93,22 @@
           (mouseClicked [mouse-event] 
             (let [mex (. mouse-event (getX))
                   mey (. mouse-event (getY))
-                  find-obj (fn [x y key] (when (some? (y key))
-                                           (let [shape (cast Shape (y key))]
-                                             (when (. shape (contains mex mey))
-                                               [x y]))))
-                  ;why do i have to filter some on map :square @board?
-                  square (first (filter some? (map-indexed #(find-obj %1 %2 :rectangle) (filter some? (map :square @board)))))
-                  checker (first (filter some? (map-indexed #(find-obj %1 %2 :circle) (filter some? (map :checker @board)))))
-                  current (first (filter some? (map-indexed (fn [x y] 
-                                             (when (true? ((y :checker) :clicked))
-                                               [x (y :checker)])) @board)))]
-               (when (some? current)
-                  (reset! board (assoc @board (first current) (assoc (@board (first current)) :checker 
-                                                                 (assoc (second current) :clicked false)))))
-                (when (some? checker)
-                  (reset! board (assoc @board (first checker) (assoc (@board (first checker)) :checker 
-                                                                     (assoc (second checker) :clicked true)))))
+                  find-clicked (fn [index ele key shapeKey]
+                                 (when (and (some? (ele key)) (some? ((ele key) shapeKey)) 
+                                            (. (cast Shape ((ele key) shapeKey)) (contains mex mey)))
+                                       [index ele]))
+                  
+                  square (first (filter some? (map-indexed #(find-clicked %1 %2 :square :rectangle) @board)))
+                  checker (first (filter some? (map-indexed #(find-clicked %1 %2 :checker :circle) @board)))
+                  curr-clicked (first (filter some? (map-indexed (fn [index ele] 
+                                                  (when (and (some? (ele :checker)) ((ele :checker) :clicked))
+                                                    [index ele])) @board)))
+                  update-clicked (fn [ele val] (when (some? ele)
+                                                 (reset! board (assoc @board (first ele) 
+                                                                      (assoc (second ele) :checker 
+                                                                             (assoc ((second ele) :checker) :clicked val))))))]
+                (update-clicked curr-clicked false)
+                (update-clicked checker true)
                 (. panel (repaint))))))
 
 (defn frame [] (doto 

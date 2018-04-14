@@ -41,7 +41,7 @@
                     (gen-board (inc n) (conj br {:square {:point [x y]
                                                            :color c
                                                            :valid-click-locs []
-                                                           :rectangle (new Rectangle2D$Double x y scale scale)}
+                                                           :square-obj (new Rectangle2D$Double x y scale scale)}
                                                  :checker (when (and (contains? checker-rows r) (= c (. Color black)))
                                                             {:point [cx cy]
                                                              :color (cond 
@@ -49,7 +49,7 @@
                                                                       (contains? t2-rows r) t2-color
                                                                       :else nil)
                                                              :valid-click-locs []
-                                                             :circle (new Ellipse2D$Double cx cy circ-dim circ-dim)
+                                                             :checker-obj (new Ellipse2D$Double cx cy circ-dim circ-dim)
                                                              :clicked false})})) br)))
 
 (def board (atom (gen-board 0 [])))
@@ -97,8 +97,8 @@
                                  (when (and (some? (ele key)) (some? ((ele key) shapeKey)) 
                                             (. (cast Shape ((ele key) shapeKey)) (contains mex mey)))
                                        [index ele]))
-                  square (first (filter some? (map-indexed #(find-clicked %1 %2 :square :rectangle) @board)))
-                  checker (first (filter some? (map-indexed #(find-clicked %1 %2 :checker :circle) @board)))
+                  square (first (filter some? (map-indexed #(find-clicked %1 %2 :square :square-obj) @board)))
+                  checker (first (filter some? (map-indexed #(find-clicked %1 %2 :checker :checker-obj) @board)))
                   curr-clicked (first (filter some? (map-indexed (fn [index ele] 
                                                   (when (and (some? (ele :checker)) ((ele :checker) :clicked))
                                                     [index ele])) @board)))

@@ -55,7 +55,7 @@
 (def board (atom (gen-board 0 [])))
 
 (defn color-frame [g]
-  (let [brd @board
+  (let [read-board @board
         img (new BufferedImage (* scale dim) (* scale dim) 
                  (. BufferedImage TYPE_INT_ARGB))
         im-graph (. img (getGraphics))]
@@ -77,7 +77,7 @@
                     (.fillOval im-graph (hl-shift cx) (hl-shift cy) circ-hl circ-hl))
                   (.setColor im-graph (checker :color))
                   (.fillOval im-graph cx cy circ-dim circ-dim))))
-            (draw-board (rest b)))) brd)
+            (draw-board (rest b)))) read-board)
        (. g (drawImage img 0 0 nil))
        (. im-graph (dispose))))
 

@@ -55,7 +55,8 @@
 (def board (atom (gen-board 0 [])))
 
 (defn color-frame [g]
-  (let [img (new BufferedImage (* scale dim) (* scale dim) 
+  (let [brd @board
+        img (new BufferedImage (* scale dim) (* scale dim) 
                  (. BufferedImage TYPE_INT_ARGB))
         im-graph (. img (getGraphics))]
        (.setColor im-graph (. Color white))
@@ -76,7 +77,7 @@
                     (.fillOval im-graph (hl-shift cx) (hl-shift cy) circ-hl circ-hl))
                   (.setColor im-graph (checker :color))
                   (.fillOval im-graph cx cy circ-dim circ-dim))))
-            (draw-board (rest b)))) @board)
+            (draw-board (rest b)))) brd)
        (. g (drawImage img 0 0 nil))
        (. im-graph (dispose))))
 
@@ -91,17 +92,18 @@
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
-            (let [mex (. mouse-event (getX))
-                  mey (. mouse-event (getY))
+            (let [read-board @board
                   find-clicked (fn [index ele key shapeKey]
                                  (when (and (some? (ele key)) (some? ((ele key) shapeKey)) 
-                                            (. (cast Shape ((ele key) shapeKey)) (contains mex mey)))
+                                            (. (cast Shape ((ele key) shapeKey)) (contains 
+                                                                                   (. mouse-event (getX)) 
+                                                                                   (. mouse-event (getY)))))
                                        [index ele]))
-                  square (first (filter some? (map-indexed #(find-clicked %1 %2 :square :square-obj) @board)))
-                  checker (first (filter some? (map-indexed #(find-clicked %1 %2 :checker :checker-obj) @board)))
+                  square (first (filter some? (map-indexed #(find-clicked %1 %2 :square :square-obj) read-board)))
+                  checker (first (filter some? (map-indexed #(find-clicked %1 %2 :checker :checker-obj) read-board)))
                   curr-clicked (first (filter some? (map-indexed (fn [index ele] 
                                                   (when (and (some? (ele :checker)) ((ele :checker) :clicked))
-                                                    [index ele])) @board)))
+                                                    [index ele])) read-board)))
                   update-clicked (fn [ele val] (when (some? ele)
                                                  (reset! board (assoc @board (first ele) 
                                                                       (assoc (second ele) :checker 

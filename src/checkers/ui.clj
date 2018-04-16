@@ -135,10 +135,11 @@
         move-chk (assoc (checker :checker) 
                         :point cp
                         :clicked false
-                        :checker-obj (new Ellipse2D$Double (first cp) (second cp) circ-dim circ-dim))
-        new-sq (assoc square :checker move-chk)
-        new-chk (assoc checker :checker nil)]
-    (assoc (assoc read-board chk-ind new-chk) sq-ind new-sq)))
+                        :checker-obj (new Ellipse2D$Double (first cp) 
+                                          (second cp) circ-dim circ-dim))]
+    (assoc (assoc read-board chk-ind 
+                  (assoc checker :checker nil)) 
+      sq-ind (assoc square :checker move-chk))))
 
 (defn frame [] (doto 
                  (new JFrame) 

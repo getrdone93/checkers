@@ -43,8 +43,6 @@
                                                            :color c
                                                            :valid-click-locs []
                                                            :square-obj (new Rectangle2D$Double x y scale scale)}
-                                                 ;think about not casting each time and instead storing casted version
-                                                 ;as a key
                                                  :checker (when (and (contains? checker-rows r) (= c black))
                                                             {:point cp
                                                              :color (cond 
@@ -101,11 +99,11 @@
             (let [read-board (get-board)
                   find-clicked (fn [index ele key shapeKey]
                                  (when (and (some? (ele key)) (some? ((ele key) shapeKey)) 
-                                            (. (cast Shape ((ele key) shapeKey)) (contains 
-                                                                                   (. mouse-event (getX)) 
-                                                                                   (. mouse-event (getY)))))
+                                             (. ((ele key) shapeKey) (contains 
+                                                                       (. mouse-event (getX)) 
+                                                                       (. mouse-event (getY)))))
                                        [index ele]))
-                  square (first (filter #(and (some? %) (= (((second %) :square) :color) (. Color black)) )
+                  square (first (filter #(and (some? %) (= (((second %) :square) :color) (. Color black)))
                                                     (map-indexed #(find-clicked %1 %2 :square :square-obj) read-board)))
                   checker (first (filter some? (map-indexed #(find-clicked %1 %2 :checker :checker-obj) read-board)))
                   curr-clicked (first (filter some? (map-indexed (fn [index ele] 

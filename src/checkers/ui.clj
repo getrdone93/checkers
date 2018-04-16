@@ -128,11 +128,13 @@
     (some? ((second square) :checker)) false
     :else true))
 
-(defn move-checker [[chk-ind checker] [sq-ind square] read-board]
-  (let [sq-point ((square :square) :point) 
-        cp (checker-point (first sq-point) (second sq-point))
-        move-chk (assoc (checker :checker) :point 
-                        (checker-point (first sq-point) (second sq-point)) :clicked false
+(defn move-checker [[chk-ind checker] 
+                    [sq-ind {{sq-point :point} :square :as square}] 
+                    read-board]
+  (let [cp (checker-point (first sq-point) (second sq-point))
+        move-chk (assoc (checker :checker) 
+                        :point cp
+                        :clicked false
                         :checker-obj (new Ellipse2D$Double (first cp) (second cp) circ-dim circ-dim))
         new-sq (assoc square :checker move-chk)
         new-chk (assoc checker :checker nil)]

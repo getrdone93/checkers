@@ -18,6 +18,8 @@
 (def t1-rows (set (range 0 3)))
 (def t2-rows (set (range 5 8)))
 (def checker-rows (clojure.set/union t1-rows t2-rows))
+(def black (. Color black))
+(def red (. Color red))
 
 (defn hl-shift [cp] (- cp 4))
 
@@ -30,34 +32,34 @@
                       y (* r scale)
                       c (if (zero? (mod r 2))
                           (if (zero? (mod n 2))
-                            (. Color red)
-                            (. Color black))
+                            red
+                            black)
                           (if (zero? (mod n 2))
-                            (. Color black)
-                            (. Color red)))
-                      cx (+ x shift)
-                      cy (+ y shift)]
+                            black
+                            red))
+                      cp (checker-point x y)]
                   (if (< n num-squares)
                     (gen-board (inc n) (conj br {:square {:point [x y]
                                                            :color c
                                                            :valid-click-locs []
                                                            :square-obj (new Rectangle2D$Double x y scale scale)}
-                                                 :checker (when (and (contains? checker-rows r) (= c (. Color black)))
-                                                            {:point [cx cy]
+                                                 :checker (when (and (contains? checker-rows r) (= c black))
+                                                            {:point cp
                                                              :color (cond 
                                                                       (contains? t1-rows r) t1-color
                                                                       (contains? t2-rows r) t2-color
                                                                       :else nil)
                                                              :valid-click-locs []
-                                                             :checker-obj (new Ellipse2D$Double cx cy circ-dim circ-dim)
+                                                             :checker-obj (new Ellipse2D$Double (first cp) 
+                                                                               (second cp) circ-dim circ-dim)
                                                              :clicked false})})) br)))
+(defn checker-point [sqx sqy] [(+ sqx shift) (+ sqy shift)])
 
 (def board (atom (gen-board 0 [])))
 
-(defn color-frame [g]
-  (let [read-board @board
-        img (new BufferedImage (* scale dim) (* scale dim) 
-                 (. BufferedImage TYPE_INT_ARGB))
+(defn color-frame [g read-board]
+  (let [img (new BufferedImage (* scale dim) (* scale dim) 
+         (. BufferedImage TYPE_INT_ARGB))
         im-graph (. img (getGraphics))]
        (.setColor im-graph (. Color white))
        (.fillRect im-graph 0 0 (. img (getWidth)) (. img (getHeight)))
@@ -69,7 +71,7 @@
                sqy (second (square :point))]
               (.setColor im-graph (square :color))
               (.fillRect im-graph sqx sqy scale scale)
-              (when (and (= (square :color) (. Color black)) (some? checker) (some? (checker :color)))
+              (when (and (= (square :color) black) (some? checker) (some? (checker :color)))
                 (let [cx (first (checker :point))
                       cy (second (checker :point))]
                   (when (checker :clicked)
@@ -85,21 +87,24 @@
 ;are arguments to the class' super constructor and then calls
 ;the supplied functions
 (def panel (doto (proxy [JPanel] []
-                        (paint [g] (color-frame g)))
+                        (paint [g] (color-frame g @board)))
              (.setPreferredSize (new Dimension 
                                      (/ (* scale dim) 5) 
                                      (/ (* scale dim) 5)))))
 
+(defn get-board [] @board)
+
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
-            (let [read-board @board
+            (let [read-board (get-board)
                   find-clicked (fn [index ele key shapeKey]
                                  (when (and (some? (ele key)) (some? ((ele key) shapeKey)) 
                                             (. (cast Shape ((ele key) shapeKey)) (contains 
                                                                                    (. mouse-event (getX)) 
                                                                                    (. mouse-event (getY)))))
                                        [index ele]))
-                  square (first (filter some? (map-indexed #(find-clicked %1 %2 :square :square-obj) read-board)))
+                  square (first (filter #( and (some? %) (= (((second %) :square) :color) (. Color black)) )
+                                                    (map-indexed #(find-clicked %1 %2 :square :square-obj) read-board)))
                   checker (first (filter some? (map-indexed #(find-clicked %1 %2 :checker :checker-obj) read-board)))
                   curr-clicked (first (filter some? (map-indexed (fn [index ele] 
                                                   (when (and (some? (ele :checker)) ((ele :checker) :clicked))
@@ -108,9 +113,30 @@
                                                  (reset! board (assoc @board (first ele) 
                                                                       (assoc (second ele) :checker 
                                                                              (assoc ((second ele) :checker) :clicked val))))))]
-                (update-clicked curr-clicked false)
-                (update-clicked checker true)
+                (if (move-checker? curr-clicked square)
+                  (reset! board (move-checker curr-clicked square read-board))
+                  (do
+                    (update-clicked curr-clicked false)
+                    (update-clicked checker true)))
                 (. panel (repaint))))))
+
+(defn move-checker? [checker square] 
+  (cond 
+    (or (nil? checker) (nil? square)) false
+    (some? ((second square) :checker)) false
+    :else true))
+
+(defn move-checker [checker square read-board]
+  (let [sq (second square)
+        chk (second checker)
+        sq-point ((sq :square) :point) 
+        cp (checker-point (first sq-point) (second sq-point))
+        move-chk (assoc (chk :checker) :point 
+                        (checker-point (first sq-point) (second sq-point)) :clicked false
+                        :checker-obj (new Ellipse2D$Double (first cp) (second cp) circ-dim circ-dim))
+        new-sq (assoc sq :checker move-chk)
+        new-chk (assoc chk :checker nil)]
+    (assoc (assoc read-board (first checker) new-chk) (first square) new-sq)))
 
 (defn frame [] (doto 
                  (new JFrame) 

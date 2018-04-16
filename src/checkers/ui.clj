@@ -135,9 +135,9 @@
                         :clicked false
                         :checker-obj (new Ellipse2D$Double (first cp) 
                                           (second cp) circ-dim circ-dim))]
-    (assoc (assoc read-board chk-ind 
-                  (assoc checker :checker nil)) 
-      sq-ind (assoc square :checker move-chk))))
+    (assoc (assoc read-board chk-ind (assoc checker :checker nil)) 
+           sq-ind 
+           (assoc square :checker move-chk))))
 
 (defn frame [] (doto 
                  (new JFrame) 

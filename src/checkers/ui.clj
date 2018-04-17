@@ -63,12 +63,10 @@
         im-graph (. img (getGraphics))]
        (.setColor im-graph (. Color white))
        (.fillRect im-graph 0 0 (. img (getWidth)) (. img (getHeight)))
-       ((fn draw-board [b]
-          (when (not (empty? b))  
-            (let [square ((first b) :square)
-               checker ((first b) :checker)
-               sqx (first (square :point))
-               sqy (second (square :point))]
+       ((fn draw-board [[{square :square
+                 {[sqx sqy] :point} :square
+                 checker :checker} :as eles]]
+          (when (not (empty? eles))  
               (.setColor im-graph (square :color))
               (.fillRect im-graph sqx sqy scale scale)
               (when (and (= (square :color) black) (some? checker) (some? (checker :color)))
@@ -78,8 +76,8 @@
                     (.setColor im-graph (. Color green))
                     (.fillOval im-graph (hl-shift cx) (hl-shift cy) circ-hl circ-hl))
                   (.setColor im-graph (checker :color))
-                  (.fillOval im-graph cx cy circ-dim circ-dim))))
-            (draw-board (rest b)))) read-board)
+                  (.fillOval im-graph cx cy circ-dim circ-dim)))
+            (draw-board (rest eles)))) read-board)
        (. g (drawImage img 0 0 nil))
        (. im-graph (dispose))))
 

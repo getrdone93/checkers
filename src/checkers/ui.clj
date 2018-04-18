@@ -10,8 +10,8 @@
 (def scale 100)
 (def dim 80)
 (def num-squares 64)
-(def t1-color (. Color yellow))
-(def t2-color (. Color magenta))
+(def team-color {:team1 (. Color yellow)
+                 :team2 (. Color magenta)})
 (def circ-dim (/ scale 2))
 (def circ-hl (+ circ-dim 9))
 (def shift (/ circ-dim 2))
@@ -45,10 +45,10 @@
                                                            :square-obj (new Rectangle2D$Double x y scale scale)}
                                                  :checker (when (and (contains? checker-rows r) (= c black))
                                                             {:point cp
-                                                             :color (cond 
-                                                                      (contains? t1-rows r) t1-color
-                                                                      (contains? t2-rows r) t2-color
-                                                                      :else nil)
+                                                             :team (cond 
+                                                                     (contains? t1-rows r) [:team1 (. Color yellow)]
+                                                                     (contains? t2-rows r) [:team2 (. Color magenta)]
+                                                                     :else nil)
                                                              :valid-click-locs []
                                                              :checker-obj (new Ellipse2D$Double (first cp) 
                                                                                (second cp) circ-dim circ-dim)
@@ -69,13 +69,13 @@
           (when (not (empty? eles))  
               (.setColor im-graph (square :color))
               (.fillRect im-graph sqx sqy scale scale)
-              (when (and (= (square :color) black) (some? checker) (some? (checker :color)))
+              (when (and (= (square :color) black) (some? checker) (some? (checker :team)))
                 (let [cx (first (checker :point))
                       cy (second (checker :point))]
                   (when (checker :clicked)
                     (.setColor im-graph (. Color green))
                     (.fillOval im-graph (hl-shift cx) (hl-shift cy) circ-hl circ-hl))
-                  (.setColor im-graph (checker :color))
+                  (.setColor im-graph (second (checker :team)))
                   (.fillOval im-graph cx cy circ-dim circ-dim)))
             (draw-board (rest eles)))) read-board)
        (. g (drawImage img 0 0 nil))
@@ -91,6 +91,37 @@
                                      (/ (* scale dim) 5)))))
 
 (defn get-board [] @board)
+
+;look at board like you are playing it
+(def move-func {:team2 [(fn [ind] (- ind 9)) (fn [ind] (- ind 7))]
+                :team1 [(fn [ind] (+ ind 7)) (fn [ind] (+ ind 9))]})
+
+(defn valid-index? [ind] 
+  (and (< 0 ind) (< ind num-squares)))
+
+(defn compute-moves [[chk-ind {chk :checker 
+                               {[team _] :team} 
+                               :checker :as checker}] read-board]
+  "compute moves for the highlighted checker"
+  (let [v1 ((first (move-func team)) chk-ind)
+        v2 ((second (move-func team)) chk-ind)]
+    (filter some? [(when (valid-index? v1)
+                     (read-board v1))
+                   (when (valid-index? v2)
+                     (read-board v2))])))
+
+(defn move-checker [[chk-ind checker] 
+                    [sq-ind {{sq-point :point} :square :as square}] 
+                    read-board]
+  (let [cp (checker-point (first sq-point) (second sq-point))
+        move-chk (assoc (checker :checker) 
+                        :point cp
+                        :clicked false
+                        :checker-obj (new Ellipse2D$Double (first cp) 
+                                          (second cp) circ-dim circ-dim))]
+    (assoc (assoc read-board chk-ind (assoc checker :checker nil)) 
+           sq-ind 
+           (assoc square :checker move-chk))))
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
@@ -110,35 +141,33 @@
                   update-clicked (fn [ele val] (when (some? ele)
                                                  (reset! board (assoc @board (first ele) 
                                                                       (assoc (second ele) :checker 
-                                                                             (assoc ((second ele) :checker) :clicked val))))))]
-                (if (move-checker? curr-clicked square)
+                                                                             (assoc ((second ele) :checker) :clicked val))))))
+                  move? (if (and (some? curr-clicked) (some? square)) 
+                          (reduce #(or %1 %2) (map #(= % (second square)) (compute-moves curr-clicked read-board)))
+                          false)]
+
+                (if move?
                   (reset! board (move-checker curr-clicked square read-board))
                   (do
                     (update-clicked curr-clicked false)
                     (update-clicked checker true)))
+                
                 (. panel (repaint))))))
-
-(defn move-checker? [checker square] 
-  (cond 
-    (or (nil? checker) (nil? square)) false
-    (some? ((second square) :checker)) false
-    :else true))
-
-(defn move-checker [[chk-ind checker] 
-                    [sq-ind {{sq-point :point} :square :as square}] 
-                    read-board]
-  (let [cp (checker-point (first sq-point) (second sq-point))
-        move-chk (assoc (checker :checker) 
-                        :point cp
-                        :clicked false
-                        :checker-obj (new Ellipse2D$Double (first cp) 
-                                          (second cp) circ-dim circ-dim))]
-    (assoc (assoc read-board chk-ind (assoc checker :checker nil)) 
-           sq-ind 
-           (assoc square :checker move-chk))))
 
 (defn frame [] (doto 
                  (new JFrame) 
                  (-> (.getContentPane) (.add panel) (.addMouseListener ml))
                  .pack 
                  .show))
+
+
+;these are the ones i care about
+;(map (fn [[ind ele]] ind) (filter some? (map-indexed (fn [ind {{color :color} :square :as ele}] 
+;                                                             (when (= black color)
+;                                                               [ind ele])) @board)))
+
+;(defn move-checker? [checker square] 
+;  (cond 
+;    (or (nil? checker) (nil? square)) false
+;    (some? ((second square) :checker)) false
+;    :else true))

@@ -7,6 +7,9 @@
  '(javax.swing JPanel JFrame JTextArea)
  '(java.awt.event MouseAdapter MouseEvent))
 
+;for using doc function!
+(use 'clojure.repl) 
+
 (def scale 100)
 (def dim 80)
 (def num-squares 64)
@@ -96,13 +99,16 @@
 (def move-func {:team2 [(fn [ind] (- ind 9)) (fn [ind] (- ind 7))]
                 :team1 [(fn [ind] (+ ind 7)) (fn [ind] (+ ind 9))]})
 
-(defn valid-index? [ind] 
+(defn valid-index? 
+  "performs a bounds check on ind"
+  [ind] 
   (and (< 0 ind) (< ind num-squares)))
 
-(defn compute-moves [[chk-ind {chk :checker 
-                               {[team _] :team} 
-                               :checker :as checker}] read-board]
+(defn compute-moves 
   "compute moves for the highlighted checker"
+  [[chk-ind {chk :checker 
+             {[team _] :team} 
+             :checker :as checker}] read-board]
   (let [v1 ((first (move-func team)) chk-ind)
         v2 ((second (move-func team)) chk-ind)]
     (filter some? [(when (valid-index? v1)

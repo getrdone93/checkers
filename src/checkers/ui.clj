@@ -27,6 +27,8 @@
 
 (defn hl-shift [cp] (- cp 4))
 
+(defn checker-point [sqx sqy] [(+ sqx shift) (+ sqy shift)])
+
 (defn gen-board [n br]
                 (let [place (mod n 8)
                       r (quot n 8)
@@ -57,8 +59,6 @@
                                                              :checker-obj (new Ellipse2D$Double (first cp) 
                                                                                (second cp) circ-dim circ-dim)
                                                              :clicked false})})) br)))
-(defn checker-point [sqx sqy] [(+ sqx shift) (+ sqy shift)])
-
 (def board (atom (gen-board 0 [])))
 
 (defn color-frame [g read-board]

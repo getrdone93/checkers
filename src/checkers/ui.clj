@@ -1,3 +1,4 @@
+;As with all journeys, it begins with a simple willingness, with an abiding faith in the unknown.
 (ns ui.core)
 
 (import 

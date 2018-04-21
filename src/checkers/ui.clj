@@ -130,6 +130,11 @@
            sq-ind 
            (assoc square :checker move-chk))))
 
+(defn valid-move? [checker square read-board]
+  (if (and (some? checker) (some? square)) 
+                          (reduce #(or %1 %2) (map #(= % (second square)) (compute-moves checker read-board)))
+                          false))
+
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
             (let [read-board (get-board)
@@ -149,9 +154,7 @@
                                                  (reset! board (assoc @board (first ele) 
                                                                       (assoc (second ele) :checker 
                                                                              (assoc ((second ele) :checker) :clicked val))))))
-                  move? (if (and (some? curr-clicked) (some? square)) 
-                          (reduce #(or %1 %2) (map #(= % (second square)) (compute-moves curr-clicked read-board)))
-                          false)]
+                  move? (valid-move? curr-clicked square read-board)]
 
                 (if move?
                   (reset! board (move-checker curr-clicked square read-board))

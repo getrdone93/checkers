@@ -132,8 +132,9 @@
 
 (defn valid-move? [checker square read-board]
   (if (and (some? checker) (some? square)) 
-                          (reduce #(or %1 %2) (map #(= % (second square)) (compute-moves checker read-board)))
-                          false))
+    (reduce #(or %1 %2) (map #(= % (second square)) 
+                             (compute-moves checker read-board)))
+    false))
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 

@@ -145,8 +145,8 @@
                                                                        (. mouse-event (getX)) 
                                                                        (. mouse-event (getY)))))
                                        [index ele]))
-                  square (first (filter #(and (some? %) (= (((second %) :square) :color) (. Color black)))
-                                                    (map-indexed #(find-clicked %1 %2 :square :square-obj) read-board)))
+                  clicked-square (first (filter #(and (some? %) (= (((second %) :square) :color) (. Color black)))
+                                                           (map-indexed #(find-clicked %1 %2 :square :square-obj) read-board)))
                   checker (first (filter some? (map-indexed #(find-clicked %1 %2 :checker :checker-obj) read-board)))
                   curr-clicked (first (filter some? (map-indexed (fn [index ele] 
                                                   (when (and (some? (ele :checker)) ((ele :checker) :clicked))
@@ -155,10 +155,10 @@
                                                  (reset! board (assoc @board (first ele) 
                                                                       (assoc (second ele) :checker 
                                                                              (assoc ((second ele) :checker) :clicked val))))))
-                  move? (valid-move? curr-clicked square read-board)]
+                  move? (valid-move? curr-clicked clicked-square read-board)]
 
                 (if move?
-                  (reset! board (move-checker curr-clicked square read-board))
+                  (reset! board (move-checker curr-clicked clicked-square read-board))
                   (do
                     (update-clicked curr-clicked false)
                     (update-clicked checker true)))

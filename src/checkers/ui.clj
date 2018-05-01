@@ -147,21 +147,21 @@
                                        [index ele]))
                   clicked-square (first (filter #(and (some? %) (= (((second %) :square) :color) (. Color black)))
                                                            (map-indexed #(find-clicked %1 %2 :square :square-obj) read-board)))
-                  checker (first (filter some? (map-indexed #(find-clicked %1 %2 :checker :checker-obj) read-board)))
-                  curr-clicked (first (filter some? (map-indexed (fn [index ele] 
+                  clicked-checker (first (filter some? (map-indexed #(find-clicked %1 %2 :checker :checker-obj) read-board)))
+                  hl-checker (first (filter some? (map-indexed (fn [index ele] 
                                                   (when (and (some? (ele :checker)) ((ele :checker) :clicked))
                                                     [index ele])) read-board)))
                   update-clicked (fn [ele val] (when (some? ele)
                                                  (reset! board (assoc @board (first ele) 
                                                                       (assoc (second ele) :checker 
                                                                              (assoc ((second ele) :checker) :clicked val))))))
-                  move? (valid-move? curr-clicked clicked-square read-board)]
+                  move? (valid-move? hl-checker clicked-square read-board)]
 
                 (if move?
-                  (reset! board (move-checker curr-clicked clicked-square read-board))
+                  (reset! board (move-checker hl-checker clicked-square read-board))
                   (do
-                    (update-clicked curr-clicked false)
-                    (update-clicked checker true)))
+                    (update-clicked hl-checker false)
+                    (update-clicked clicked-checker true)))
                 
                 (. panel (repaint))))))
 

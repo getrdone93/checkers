@@ -118,7 +118,7 @@
                      (read-board v2))])))
 
 (defn move [ind read-board] 
-  (when (valid-index? ind)
+  (when (and (valid-index? ind) (= black (((read-board ind) :square) :color)))
     (read-board ind)))
 
 (defn classify-move [o-team ind move la-func]

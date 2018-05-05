@@ -116,37 +116,36 @@
                      (read-board v1))
                    (when (valid-index? v2)
                      (read-board v2))])))
-; (paths-new o-team [(left ind) left-move] read-board (conj sub-path square) res)
 
 (defn move [ind read-board] 
   (when (valid-index? ind)
     (read-board ind)))
 
-(defn classify-move [o-team ind move]
+(defn classify-move [o-team ind move la-func]
   (when (some? move)
     (let [{chk :checker
-            {[team _] :team}} move]
+           [team _] :team} move]
       (cond
 		         (nil? chk) [false move]
 		         (= o-team team) [false nil]
-		         :else (let [la-ind (left (left ind))
-                         la-left (move la-ind)]
-                      (if (and (some? la-left) (nil? (la-left :checker)))
+		         :else (let [la-ind (la-func (la-func ind))
+                         la-sq (move la-ind)]
+                      (if (and (some? la-sq) (nil? (la-sq :checker)))
                                [true move]
                                [false nil]))))))
 
 (defn paths [o-team [ind {chk :checker 
-                      {[team _] :team} 
+                      [team _] :team 
                       :as square}] read-board sub-path res]
   (let [[left right] (move-func o-team)
-        left-move (move (left ind))
-        right-move (move (right ind))
-        [left-recur nl-sq] (classify-move o-team ind left-move sub-path)
-        [right-recur nr-sq] (classify-move o-team ind right-move sub-path)]
+        left-move (move (left ind) read-board)
+        right-move (move (right ind) read-board)
+        [left-recur nl-sq] (classify-move o-team ind left-move left)
+        [right-recur nr-sq] (classify-move o-team ind right-move right)]
     (if (true? left-recur)
-      (paths-new o-team [(left ind) left-move] read-board (conj sub-path nl-sq) res)
+      (paths o-team [(left ind) left-move] read-board (conj sub-path nl-sq) res)
       (if (true? right-recur)
-        (paths-new o-team [(right ind) right-move] read-board (conj sub-path nr-sq) res)
+        (paths o-team [(right ind) right-move] read-board (conj sub-path nr-sq) res)
         (let [lp (if (some? nl-sq) 
                    (conj sub-path nl-sq)
                    sub-path) 

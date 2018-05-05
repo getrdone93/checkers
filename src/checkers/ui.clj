@@ -58,7 +58,8 @@
                                                              :valid-click-locs []
                                                              :checker-obj (new Ellipse2D$Double (first cp) 
                                                                                (second cp) circ-dim circ-dim)
-                                                             :clicked false})})) br)))
+                                                             :clicked false})})) 
+                    br)))
 (def board (atom (gen-board 0 [])))
 
 (defn color-frame [g read-board]
@@ -96,16 +97,15 @@
 
 (defn get-board [] @board)
 
-;look at board like you are playing it
 (def move-func {:team2 [(fn [ind] (- ind 9)) (fn [ind] (- ind 7))]
-                :team1 [(fn [ind] (+ ind 7)) (fn [ind] (+ ind 9))]})
+                :team1 [(fn [ind] (+ ind 9)) (fn [ind] (+ ind 7))]})
 
 (defn valid-index? 
   "performs a bounds check on ind"
   [ind] 
   (and (< 0 ind) (< ind num-squares)))
 
-(defn compute-moves 
+(defn compute-all-moves
   "compute moves for the highlighted checker"
   [[chk-ind {chk :checker 
              {[team _] :team} 
@@ -116,6 +116,44 @@
                      (read-board v1))
                    (when (valid-index? v2)
                      (read-board v2))])))
+; (paths-new o-team [(left ind) left-move] read-board (conj sub-path square) res)
+
+(defn move [ind read-board] 
+  (when (valid-index? ind)
+    (read-board ind)))
+
+(defn classify-move [o-team ind move]
+  (when (some? move)
+    (let [{chk :checker
+            {[team _] :team}} move]
+      (cond
+		         (nil? chk) [false move]
+		         (= o-team team) [false nil]
+		         :else (let [la-ind (left (left ind))
+                         la-left (move la-ind)]
+                      (if (and (some? la-left) (nil? (la-left :checker)))
+                               [true move]
+                               [false nil]))))))
+
+(defn paths [o-team [ind {chk :checker 
+                      {[team _] :team} 
+                      :as square}] read-board sub-path res]
+  (let [[left right] (move-func o-team)
+        left-move (move (left ind))
+        right-move (move (right ind))
+        [left-recur nl-sq] (classify-move o-team ind left-move sub-path)
+        [right-recur nr-sq] (classify-move o-team ind right-move sub-path)]
+    (if (true? left-recur)
+      (paths-new o-team [(left ind) left-move] read-board (conj sub-path nl-sq) res)
+      (if (true? right-recur)
+        (paths-new o-team [(right ind) right-move] read-board (conj sub-path nr-sq) res)
+        (let [lp (if (some? nl-sq) 
+                   (conj sub-path nl-sq)
+                   sub-path) 
+              rp (if (some? nr-sq)
+                   (conj sub-path nr-sq)
+                   sub-path)]
+          (conj (conj res lp) rp))))))
 
 (defn move-checker [[chk-ind checker] 
                     [sq-ind {{sq-point :point} :square :as square}] 
@@ -133,7 +171,7 @@
 (defn valid-move? [checker square read-board]
   (if (and (some? checker) (some? square)) 
     (reduce #(or %1 %2) (map #(= % (second square)) 
-                             (compute-moves checker read-board)))
+                             (compute-all-moves checker read-board)))
     false))
 
 (def ml (proxy [MouseAdapter] []

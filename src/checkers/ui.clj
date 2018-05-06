@@ -142,10 +142,10 @@
                       [team _] :team 
                       :as square} :as entry] read-board left-path right-path frontier res]
   (let [[left right] (move-func o-team)
-        [left-ind left-move :as left-ent] [(left ind) (move (left ind) read-board)]
-        [right-ind right-move :as right-ent] [(right ind) (move (right ind) read-board)]
-        {lp :add-to-path lf :new-frontier} (add-frontier frontier o-team entry left read-board)
-        {rp :add-to-path rf :new-frontier} (add-frontier frontier o-team entry right read-board)
+        left-ent [(left ind) (move (left ind) read-board)]
+        right-ent [(right ind) (move (right ind) read-board)]
+        {lp :add-to-path lf :new-frontier} (add-frontier frontier o-team left-ent left read-board)
+        {rp :add-to-path rf :new-frontier} (add-frontier frontier o-team right-ent right read-board)
         nlp (add-to-path left-path lp)
         nrp (add-to-path right-path rp)]
     (cond

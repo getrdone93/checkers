@@ -121,38 +121,39 @@
   (when (and (valid-index? ind) (= black (((read-board ind) :square) :color)))
     (read-board ind)))
 
-(defn classify-move [o-team read-board ind move-sq la-func]
-  (when (some? move)
-    (let [{chk :checker
-           [team _] :team} move-sq]
-      (cond
-		         (nil? chk) [false move-sq]
-		         (= o-team team) [false nil]
-		         :else (let [la-ind (la-func (la-func ind))
-                         la-sq (move la-ind read-board)]
-                      (if (and (some? la-sq) (nil? (la-sq :checker)))
-                               [true move-sq]
-                               [false nil]))))))
+(defn add-frontier [frontier o-team [ind {chk :checker 
+                                           [team _] :team 
+                                           :as square} :as entry] df read-board]
+  (cond
+    (nil? chk) {:add-to-path [entry] :new-frontier frontier}
+    (not= o-team team) (let [la-ind (df ind)
+                             la (move la-ind read-board)]
+                         (if (and (some? la) (nil? (la :checker)))
+                           {:add-to-path [entry [la-ind la]] :new-frontier (conj frontier [la-ind la])}
+                           {:add-to-path nil :new-frontier frontier}))  
+    :else {:add-to-path nil :new-frontier frontier}))
 
-(defn paths [o-team [ind {chk :checker 
+(defn add-to-path [add-path path]
+  (if (empty? add-path)
+    path
+    (vec (concat path add-path))))
+
+(defn dfs-paths [o-team [ind {chk :checker 
                       [team _] :team 
-                      :as square}] read-board sub-path res]
+                      :as square} :as entry] read-board left-path right-path frontier res]
   (let [[left right] (move-func o-team)
-        left-move (move (left ind) read-board)
-        right-move (move (right ind) read-board)
-        [left-recur nl-sq] (classify-move o-team read-board ind left-move left)
-        [right-recur nr-sq] (classify-move o-team read-board ind right-move right)]
-    (if (true? left-recur)
-      (paths o-team [(left ind) nl-sq] read-board (conj sub-path nl-sq) res)
-      (if (true? right-recur)
-        (paths o-team [(right ind) nr-sq] read-board (conj sub-path nr-sq) res)
-        (let [lp (if (some? nl-sq) 
-                   (conj sub-path nl-sq)
-                   sub-path) 
-              rp (if (some? nr-sq)
-                   (conj sub-path nr-sq)
-                   sub-path)]
-          (conj (conj res lp) rp))))))
+        [left-ind left-move :as left-ent] [(left ind) (move (left ind) read-board)]
+        [right-ind right-move :as right-ent] [(right ind) (move (right ind) read-board)]
+        {lp :add-to-path lf :new-frontier} (add-frontier frontier o-team entry left read-board)
+        {rp :add-to-path rf :new-frontier} (add-frontier frontier o-team entry right read-board)
+        nlp (add-to-path left-path lp)
+        nrp (add-to-path right-path rp)]
+    (cond
+	      (and (empty? lf) (empty? rf)) (conj (conj res nlp) nrp)
+	      (empty? lf) (dfs-paths o-team (first rf) read-board nlp nrp rf (conj res nlp))
+        (empty? rf) (dfs-paths o-team (first lf) read-board nlp nrp lf (conj res nrp))
+        :else (concat (dfs-paths o-team (first lf) read-board nlp nrp lf (conj res nlp))
+                      (dfs-paths o-team (first rf) read-board nlp nrp rf (conj res nrp))))))
 
 (defn move-checker [[chk-ind checker] 
                     [sq-ind {{sq-point :point} :square :as square}] 
@@ -207,15 +208,3 @@
                  (-> (.getContentPane) (.add panel) (.addMouseListener ml))
                  .pack 
                  .show))
-
-
-;these are the ones i care about
-;(map (fn [[ind ele]] ind) (filter some? (map-indexed (fn [ind {{color :color} :square :as ele}] 
-;                                                             (when (= black color)
-;                                                               [ind ele])) @board)))
-
-;(defn move-checker? [checker square] 
-;  (cond 
-;    (or (nil? checker) (nil? square)) false
-;    (some? ((second square) :checker)) false
-;    :else true))

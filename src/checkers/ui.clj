@@ -121,39 +121,53 @@
   (when (and (valid-index? ind) (= black (((read-board ind) :square) :color)))
     (read-board ind)))
 
-(defn add-frontier [frontier o-team [ind {chk :checker 
-                                           [team _] :team 
-                                           :as square} :as entry] df read-board]
-  (cond
-    (nil? chk) {:add-to-path [entry] :new-frontier frontier}
-    (not= o-team team) (let [la-ind (df ind)
-                             la (move la-ind read-board)]
-                         (if (and (some? la) (nil? (la :checker)))
-                           {:add-to-path [entry [la-ind la]] :new-frontier (conj frontier [la-ind la])}
-                           {:add-to-path nil :new-frontier frontier}))  
-    :else {:add-to-path nil :new-frontier frontier}))
+;(defn add-frontier [frontier o-team [ind {chk :checker 
+;                                           [team _] :team 
+;                                           :as square} :as entry] df read-board]
+;  (cond
+;    (nil? chk) {:add-to-path [entry] :new-frontier frontier}
+;    (not= o-team team) (let [la-ind (df ind)
+;                             la (move la-ind read-board)]
+;                         (if (and (some? la) (nil? (la :checker)))
+;                           {:add-to-path [entry [la-ind la]] :new-frontier (conj frontier [la-ind la])}
+;                           {:add-to-path nil :new-frontier frontier}))  
+;    :else {:add-to-path nil :new-frontier frontier}))
+;
+;(defn add-to-path [add-path path]
+;  (if (empty? add-path)
+;    path
+;    (vec (concat path add-path))))
+;
+;(defn dfs-paths [o-team [ind {chk :checker 
+;                      [team _] :team 
+;                      :as square} :as entry] read-board left-path right-path frontier res]
+;  (let [[left right] (move-func o-team)
+;        left-ent [(left ind) (move (left ind) read-board)]
+;        right-ent [(right ind) (move (right ind) read-board)]
+;        {lp :add-to-path lf :new-frontier} (add-frontier frontier o-team left-ent left read-board)
+;        {rp :add-to-path rf :new-frontier} (add-frontier frontier o-team right-ent right read-board)
+;        nlp (add-to-path left-path lp)
+;        nrp (add-to-path right-path rp)]
+;    (cond
+;	      (and (empty? lf) (empty? rf)) (conj (conj res nlp) nrp)
+;	      (empty? lf) (dfs-paths o-team (first rf) read-board nlp nrp rf (conj res nlp))
+;        (empty? rf) (dfs-paths o-team (first lf) read-board nlp nrp lf (conj res nrp))
+;        :else (concat (dfs-paths o-team (first lf) read-board nlp nrp lf (conj res nlp))
+;                      (dfs-paths o-team (first rf) read-board nlp nrp rf (conj res nrp))))))
 
-(defn add-to-path [add-path path]
-  (if (empty? add-path)
-    path
-    (vec (concat path add-path))))
+(defn add-square [path square]
+  (if (and (some? square) (nil? ((second square) :checker)))
+    (conj path square)
+    path))
 
-(defn dfs-paths [o-team [ind {chk :checker 
-                      [team _] :team 
-                      :as square} :as entry] read-board left-path right-path frontier res]
-  (let [[left right] (move-func o-team)
+(defn simple-paths [[ind {chk :checker 
+                      {[team _] :team} :checker 
+                      :as square} :as entry] read-board]
+  (let [[left right] (move-func team)
         left-ent [(left ind) (move (left ind) read-board)]
         right-ent [(right ind) (move (right ind) read-board)]
-        {lp :add-to-path lf :new-frontier} (add-frontier frontier o-team left-ent left read-board)
-        {rp :add-to-path rf :new-frontier} (add-frontier frontier o-team right-ent right read-board)
-        nlp (add-to-path left-path lp)
-        nrp (add-to-path right-path rp)]
-    (cond
-	      (and (empty? lf) (empty? rf)) (conj (conj res nlp) nrp)
-	      (empty? lf) (dfs-paths o-team (first rf) read-board nlp nrp rf (conj res nlp))
-        (empty? rf) (dfs-paths o-team (first lf) read-board nlp nrp lf (conj res nrp))
-        :else (concat (dfs-paths o-team (first lf) read-board nlp nrp lf (conj res nlp))
-                      (dfs-paths o-team (first rf) read-board nlp nrp rf (conj res nrp))))))
+        res []]
+    (add-square (add-square res left-ent) right-ent)))
 
 (defn move-checker [[chk-ind checker] 
                     [sq-ind {{sq-point :point} :square :as square}] 

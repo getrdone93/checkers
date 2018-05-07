@@ -195,7 +195,7 @@
                                    :right (jump entry (first right-jump) (second right-jump))}
       (true? can-jump-l) {:left (jump entry (first left-jump) (second left-jump)) :right nil}
       (true? can-jump-r) {:left nil :right (jump entry (first right-jump) (second right-jump))}
-      :else [])))
+      :else {:left nil :right nil})))
 
 (defn move-checker [[chk-ind checker] 
                     [sq-ind {{sq-point :point} :square :as square}] 

@@ -191,10 +191,10 @@
         can-jump-l (= 2 (count left-jump))
         can-jump-r (= 2 (count right-jump))]
     (cond
-      (and can-jump-l can-jump-r) (vec (concat (jump entry (first left-jump) (second left-jump))
-                                               (jump entry (first right-jump) (second right-jump))))
-      (true? can-jump-l) (jump entry (first left-jump) (second left-jump))
-      (true? can-jump-r) (jump entry (first right-jump) (second right-jump))
+      (and can-jump-l can-jump-r) {:left (jump entry (first left-jump) (second left-jump))
+                                   :right (jump entry (first right-jump) (second right-jump))}
+      (true? can-jump-l) {:left (jump entry (first left-jump) (second left-jump)) :right nil}
+      (true? can-jump-r) {:left nil :right (jump entry (first right-jump) (second right-jump))}
       :else [])))
 
 (defn move-checker [[chk-ind checker] 

@@ -176,20 +176,20 @@
   (when (some? mc) (not= st (first (mc :team))) (nil? ec)
     [se me ee]))
 
-;(empty? (filter #(nil? (second %)) left-jump))
+(defn jump-squares [start-index df read-board] 
+  (let [mid-index (df start-index)
+        end-index (df mid-index)]
+    (filter (fn [x] (when (some? (second x)) x))
+            [[mid-index (move mid-index read-board)] [end-index (move end-index read-board)]])))
 
 (defn jump-paths [[ind {chk :checker 
                       {[team _] :team} :checker 
                       :as square} :as entry] read-board]
   (let [[left right] (move-func team)
-        lmi (left ind)
-        lee (left lmi)
-        left-jump [[lmi (move lmi read-board)] [lee (move lee read-board)]]
-        rmi (right ind)
-        ree (right rmi)
-        right-jump [[rmi (move rmi read-board)] [ree (move ree read-board)]]
-        can-jump-l (empty? (filter #(nil? (second %)) left-jump))
-        can-jump-r (empty? (filter #(nil? (second %)) right-jump))]
+        left-jump (jump-squares ind left read-board)
+        right-jump (jump-squares ind right read-board)
+        can-jump-l (= 2 (count left-jump))
+        can-jump-r (= 2 (count right-jump))]
     (cond
       (and can-jump-l can-jump-r) (vec (concat (jump entry (first left-jump) (second left-jump))
                                                (jump entry (first right-jump) (second right-jump))))

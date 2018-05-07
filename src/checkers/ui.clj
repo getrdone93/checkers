@@ -174,7 +174,7 @@
             [mi {mc :checker} :as me]
             [ei {ec :checker} :as ee]]
   (when (some? mc) (not= st (first (mc :team))) (nil? ec)
-    [se me ee]))
+    [me ee]))
 
 (defn jump-squares [start-index df read-board] 
   (let [mid-index (df start-index)

@@ -169,6 +169,34 @@
         res []]
     (add-square (add-square res left-ent) right-ent)))
 
+(defn jump [[si {sc :checker 
+                {[st _] :team} :checker} :as se] 
+            [mi {mc :checker} :as me]
+            [ei {ec :checker} :as ee]]
+  (when (some? mc) (not= st (first (mc :team))) (nil? ec)
+    [se me ee]))
+
+;(empty? (filter #(nil? (second %)) left-jump))
+
+(defn jump-paths [[ind {chk :checker 
+                      {[team _] :team} :checker 
+                      :as square} :as entry] read-board]
+  (let [[left right] (move-func team)
+        lmi (left ind)
+        lee (left lmi)
+        left-jump [[lmi (move lmi read-board)] [lee (move lee read-board)]]
+        rmi (right ind)
+        ree (right rmi)
+        right-jump [[rmi (move rmi read-board)] [ree (move ree read-board)]]
+        can-jump-l (empty? (filter #(nil? (second %)) left-jump))
+        can-jump-r (empty? (filter #(nil? (second %)) right-jump))]
+    (cond
+      (and can-jump-l can-jump-r) (vec (concat (jump entry (first left-jump) (second left-jump))
+                                               (jump entry (first right-jump) (second right-jump))))
+      (true? can-jump-l) (jump entry (first left-jump) (second left-jump))
+      (true? can-jump-r) (jump entry (first right-jump) (second right-jump))
+      :else [])))
+
 (defn move-checker [[chk-ind checker] 
                     [sq-ind {{sq-point :point} :square :as square}] 
                     read-board]

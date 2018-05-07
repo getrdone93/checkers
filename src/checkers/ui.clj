@@ -131,9 +131,8 @@
                       :as square} :as entry] read-board]
   (let [[left right] (move-func team)
         left-ent [(left ind) (move (left ind) read-board)]
-        right-ent [(right ind) (move (right ind) read-board)]
-        res []]
-    (add-square (add-square res left-ent) right-ent)))
+        right-ent [(right ind) (move (right ind) read-board)]]
+    (add-square (add-square [] left-ent) right-ent)))
 
 (defn jump [[si {sc :checker 
                 {[st _] :team} :checker} :as se] 
@@ -162,6 +161,12 @@
       (true? can-jump-l) {:left (jump entry (first left-jump) (second left-jump)) :right nil}
       (true? can-jump-r) {:left nil :right (jump entry (first right-jump) (second right-jump))}
       :else {:left nil :right nil})))
+
+;(defn paths [[ind {chk :checker 
+;                      {[team _] :team} :checker 
+;                      :as square} :as entry] read-board]
+;  (let [simple (simple-paths entry read-board)]
+;    ))
 
 (defn move-checker [[chk-ind checker] 
                     [sq-ind {{sq-point :point} :square :as square}] 

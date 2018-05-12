@@ -138,7 +138,7 @@
                 {[st _] :team} :checker} :as se] 
             [mi {mc :checker} :as me]
             [ei {ec :checker} :as ee]]
-  (when (and (some? mc) (not= st (first (mc :team))) (nil? ec))
+  (when (and (some? mc) (some? ee) (not= st (first (mc :team))) (nil? ec))
     [me ee]))
 
 (defn jump-squares [start-index df read-board] 
@@ -151,15 +151,18 @@
                       {[team _] :team} :checker 
                       :as square} :as entry] read-board]
   (let [[left right] (move-func team)
-        left-jump (jump-squares ind left read-board)
-        right-jump (jump-squares ind right read-board)
-        can-jump-l (= 2 (count left-jump))
-        can-jump-r (= 2 (count right-jump))]
+        left-jump-sqs (jump-squares ind left read-board)
+        left-jump (jump entry (first left-jump-sqs) (second left-jump-sqs))
+        right-jump-sqs (jump-squares ind right read-board)
+        right-jump (jump entry (first right-jump-sqs) (second right-jump-sqs))
+        can-jump-l (some? left-jump)
+        can-jump-r (some? right-jump)]
+    (println right-jump-sqs)
     (cond
-      (and can-jump-l can-jump-r) {:left (jump entry (first left-jump) (second left-jump))
-                                   :right (jump entry (first right-jump) (second right-jump))}
-      (true? can-jump-l) {:left (jump entry (first left-jump) (second left-jump)) :right nil}
-      (true? can-jump-r) {:left nil :right (jump entry (first right-jump) (second right-jump))}
+      (and can-jump-l can-jump-r) {:left left-jump
+                                   :right right-jump}
+      (true? can-jump-l) {:left left-jump :right nil}
+      (true? can-jump-r) {:left nil :right right-jump}
       :else {:left nil :right nil})))
 
 ;(defn paths [[ind {chk :checker 

@@ -138,7 +138,7 @@
                 {[st _] :team} :checker} :as se] 
             [mi {mc :checker} :as me]
             [ei {ec :checker} :as ee]]
-  (when (and (some? mc) (some? ee) (not= st (first (mc :team))) (nil? ec))
+  (when (and (some? se) (some? me) (some? ee) (some? mc) (not= st (first (mc :team))) (nil? ec))
     [me ee]))
 
 (defn jump-squares [start-index df read-board] 
@@ -157,7 +157,6 @@
         right-jump (jump entry (first right-jump-sqs) (second right-jump-sqs))
         can-jump-l (some? left-jump)
         can-jump-r (some? right-jump)]
-    (println right-jump-sqs)
     (cond
       (and can-jump-l can-jump-r) {:left left-jump
                                    :right right-jump}

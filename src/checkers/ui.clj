@@ -138,14 +138,14 @@
                 {[st _] :team} :checker} :as se] 
             [mi {mc :checker} :as me]
             [ei {ec :checker} :as ee]]
-  (when (and (some? se) (some? me) (some? ee) (some? mc) (not= st (first (mc :team))) (nil? ec))
+  (when (and (some? mc) (not= st (first (mc :team))) (nil? ec))
     [me ee]))
 
 (defn jump-squares [start-index df read-board] 
   (let [mid-index (df start-index)
         end-index (df mid-index)]
-    (filter (fn [x] (when (some? (second x)) x))
-            [[mid-index (move mid-index read-board)] [end-index (move end-index read-board)]])))
+    (filter some? (filter (fn [x] (when (some? (second x)) x))
+                          [[mid-index (move mid-index read-board)] [end-index (move end-index read-board)]]))))
 
 (defn jump-paths [[ind {chk :checker 
                       {[team _] :team} :checker 
@@ -157,18 +157,22 @@
         right-jump (jump entry (first right-jump-sqs) (second right-jump-sqs))
         can-jump-l (some? left-jump)
         can-jump-r (some? right-jump)]
-    (cond
-      (and can-jump-l can-jump-r) {:left left-jump
-                                   :right right-jump}
-      (true? can-jump-l) {:left left-jump :right nil}
-      (true? can-jump-r) {:left nil :right right-jump}
-      :else {:left nil :right nil})))
+    {:left (when (true? can-jump-l) 
+             left-jump) 
+     :right (when (true? can-jump-r)
+              right-jump)}))
 
-(defn paths [[ind {chk :checker 
+(defn all-jump-paths [[ind {chk :checker 
                       {[team _] :team} :checker 
                       :as square} :as entry] read-board]
-  (let [simple (simple-paths entry read-board)]
+  (let [{left :left right :right} (jump-paths entry read-board)]
     ))
+
+;(defn paths [[ind {chk :checker 
+;                      {[team _] :team} :checker 
+;                      :as square} :as entry] read-board]
+;  (let [simple (simple-paths entry read-board)]
+;    ))
 
 (defn move-checker [[chk-ind checker] 
                     [sq-ind {{sq-point :point} :square :as square}] 

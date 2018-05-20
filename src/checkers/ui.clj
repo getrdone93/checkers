@@ -174,18 +174,21 @@
 ;  (let [simple (simple-paths entry read-board)]
 ;    ))
 
-(defn move-checker [[chk-ind checker] 
+(defn move-checker [[chk-ind {{team :team} :checker :as checker}] 
                     [sq-ind {{sq-point :point} :square :as square}] 
                     read-board]
   (let [cp (checker-point (first sq-point) (second sq-point))
-        move-chk (assoc (checker :checker) 
+        move-chk (assoc checker 
                         :point cp
                         :clicked false
+                        :team team
                         :checker-obj (new Ellipse2D$Double (first cp) 
-                                          (second cp) circ-dim circ-dim))]
-    (assoc (assoc read-board chk-ind (assoc checker :checker nil)) 
-           sq-ind 
-           (assoc square :checker move-chk))))
+                                          (second cp) circ-dim circ-dim))
+        sq-entry (assoc square :checker move-chk)]
+    {:read-board (assoc (assoc read-board chk-ind (assoc checker :checker nil)) 
+                        sq-ind 
+                        sq-entry)
+     :new-entry [sq-ind sq-entry]}))
 
 (defn valid-move? [checker square read-board]
   (if (and (some? checker) (some? square)) 
@@ -215,7 +218,7 @@
                   move? (valid-move? hl-checker clicked-square read-board)]
 
                 (if move?
-                  (reset! board (move-checker hl-checker clicked-square read-board))
+                  (reset! board ((move-checker hl-checker clicked-square read-board) :read-board))
                   (do
                     (update-clicked hl-checker false)
                     (update-clicked clicked-checker true)))

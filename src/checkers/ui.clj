@@ -51,10 +51,14 @@
                                                            :square-obj (new Rectangle2D$Double x y scale scale)}
                                                  :checker (when (and (contains? checker-rows r) (= c black))
                                                             {:point cp
-                                                             :team (cond 
-                                                                     (contains? t1-rows r) [:team1 (. Color yellow)]
-                                                                     (contains? t2-rows r) [:team2 (. Color magenta)]
-                                                                     :else nil)
+                                                             :team (if (contains? t1-rows r)
+                                                                    [:team1 (. Color yellow)]
+                                                                    [:team2 (. Color magenta)]) 
+                                                             
+                                                             ;(cond 
+                                                             ;  (contains? t1-rows r) [:team1 (. Color yellow)]
+                                                             ;  (contains? t2-rows r) [:team2 (. Color magenta)]
+                                                             ;  :else nil)
                                                              :valid-click-locs []
                                                              :checker-obj (new Ellipse2D$Double (first cp) 
                                                                                (second cp) circ-dim circ-dim)
@@ -145,7 +149,8 @@
   (let [mid-index (df start-index)
         end-index (df mid-index)]
     (filter some? (filter (fn [x] (when (some? (second x)) x))
-                          [[mid-index (move mid-index read-board)] [end-index (move end-index read-board)]]))))
+                          [[mid-index (move mid-index read-board)] 
+                           [end-index (move end-index read-board)]]))))
 
 (defn jump-paths [[ind {chk :checker 
                       {[team _] :team} :checker 
@@ -162,11 +167,49 @@
      :right (when (true? can-jump-r)
               right-jump)}))
 
+(defn new-key [key c-func]
+  (keyword (str "p" (c-func key))))
+
+(defn look-back [key]
+  (if (< (dec key) 0)
+    (new-key key (fn [x] x))
+    (new-key key dec)))
+
+(defn update-prev-next [key [lk rk] paths]
+  (let [prev-key (new-key key dec)
+        {prev-next :next :as prev-entry} (paths prev-key)]
+    (if (some? prev-entry)
+      (assoc paths prev-key (assoc prev-entry :next
+                                   (set (filter some? (clojure.set/union prev-next #{lk} #{rk})))))
+      paths)))
+
 (defn all-jump-paths [[ind {chk :checker 
                       {[team _] :team} :checker 
-                      :as square} :as entry] read-board]
-  (let [{left :left right :right} (jump-paths entry read-board)]
-    ))
+                      :as square} :as entry] read-board curr-key res]
+  (let [{left :left right :right} (jump-paths entry read-board)
+        [lk left-entry] (when (some? left)
+                          [(keyword (str "p" curr-key)) {:path left :next #{}}])
+        [rk right-entry] (when (some? right)
+                          [(keyword (str "p" (inc curr-key))) {:path right :next #{}}])
+        
+;        prev-key (keyword (str "p" (dec curr-key)))
+;        {prev-next :next :as prev-entry} (res prev-key)
+;        prev-next-new (set (filter some? (clojure.set/union prev-next #{lk} #{rk})))
+;        new-res (assoc res prev-key (assoc prev-entry :next prev-next-new))
+
+        next-key (inc (inc curr-key))        
+        new-res (update-prev-next curr-key [lk rk] res)
+        
+        [{left-rb :read-board
+          nlc :new-entry} 
+         {right-rb :read-board
+          nrc :new-entry}] [(move-checker entry (last left)) (move-checker entry (last right))]]
+    (cond
+      (and (some? left) (some? right)) (merge (all-jump-paths nlc left-rb next-key (assoc new-res lk left-entry)) 
+                                               (all-jump-paths nrc right-rb next-key (assoc new-res rk right-entry)))
+      (some? left) (all-jump-paths nlc left-rb next-key (assoc new-res lk left-entry))
+      (some? right) (all-jump-paths nrc right-rb next-key (assoc new-res rk right-entry))
+      :else new-res)))
 
 ;(defn paths [[ind {chk :checker 
 ;                      {[team _] :team} :checker 
@@ -174,18 +217,21 @@
 ;  (let [simple (simple-paths entry read-board)]
 ;    ))
 
-(defn move-checker [[chk-ind checker] 
+(defn move-checker [[chk-ind {{team :team} :checker :as checker}] 
                     [sq-ind {{sq-point :point} :square :as square}] 
                     read-board]
   (let [cp (checker-point (first sq-point) (second sq-point))
-        move-chk (assoc (checker :checker) 
+        move-chk (assoc checker 
                         :point cp
                         :clicked false
+                        :team team
                         :checker-obj (new Ellipse2D$Double (first cp) 
-                                          (second cp) circ-dim circ-dim))]
-    (assoc (assoc read-board chk-ind (assoc checker :checker nil)) 
-           sq-ind 
-           (assoc square :checker move-chk))))
+                                          (second cp) circ-dim circ-dim))
+        sq-entry (assoc square :checker move-chk)]
+    {:read-board (assoc (assoc read-board chk-ind (assoc checker :checker nil)) 
+                        sq-ind 
+                        sq-entry)
+     :new-entry [sq-ind sq-entry]}))
 
 (defn valid-move? [checker square read-board]
   (if (and (some? checker) (some? square)) 
@@ -215,7 +261,7 @@
                   move? (valid-move? hl-checker clicked-square read-board)]
 
                 (if move?
-                  (reset! board (move-checker hl-checker clicked-square read-board))
+                  (reset! board (:read-board (move-checker hl-checker clicked-square read-board)))
                   (do
                     (update-clicked hl-checker false)
                     (update-clicked clicked-checker true)))

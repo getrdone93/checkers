@@ -186,7 +186,27 @@
 (defn all-jump-paths [[ind {chk :checker 
                       {[team _] :team} :checker 
                       :as square} :as entry] read-board curr-key res]
+  (let [{left :left right :right} (jump-paths entry read-board)]
+    (cond 
+      (and (nil? left) (nil? right)) res
+      :else (let [next-key (inc (inc curr-key))] 
+              (if (some? left)
+                (let [[lk left-entry] [(keyword (str "p" curr-key)) {:path left :next #{}}]
+                      new-res (update-prev-next curr-key [lk nil] res)
+                      {left-rb :read-board
+                       nlc :new-entry} (move-checker entry (last left) read-board)]
+                  (all-jump-paths nlc left-rb next-key (assoc new-res lk left-entry)))
+                (let [[rk right-entry] [(keyword (str "p" curr-key)) {:path right :next #{}}]
+                      new-res (update-prev-next curr-key [rk nil] res)
+                      {right-rb :read-board
+                       nrc :new-entry} (move-checker entry (last right) read-board)]
+                  (all-jump-paths nrc right-rb next-key (assoc new-res rk right-entry))))))))
+
+(defn all-jump-paths [[ind {chk :checker 
+                      {[team _] :team} :checker 
+                      :as square} :as entry] read-board curr-key res]
   (let [{left :left right :right} (jump-paths entry read-board)
+        
         [lk left-entry] (when (some? left)
                           [(keyword (str "p" curr-key)) {:path left :next #{}}])
         [rk right-entry] (when (some? right)
@@ -203,7 +223,7 @@
         [{left-rb :read-board
           nlc :new-entry} 
          {right-rb :read-board
-          nrc :new-entry}] [(move-checker entry (last left)) (move-checker entry (last right))]]
+          nrc :new-entry}] [(move-checker entry (last left) read-board) (move-checker entry (last right) read-board)]]
     (cond
       (and (some? left) (some? right)) (merge (all-jump-paths nlc left-rb next-key (assoc new-res lk left-entry)) 
                                                (all-jump-paths nrc right-rb next-key (assoc new-res rk right-entry)))

@@ -180,15 +180,14 @@
       paths)))
 
 (defn move-checker [[chk-ind {{team :team} :checker :as checker}] 
-                    [sq-ind {{sq-point :point} :square :as square}] 
+                    [sq-ind {{[sqx sqy] :point} :square :as square}] 
                     read-board]
-  (let [cp (checker-point (first sq-point) (second sq-point))
-        move-chk (assoc checker 
-                        :point cp
+  (let [[cpx cpy] (checker-point sqx sqy)
+        move-chk (assoc (checker :checker) 
+                        :point [cpx cpy]
                         :clicked false
                         :team team
-                        :checker-obj (new Ellipse2D$Double (first cp) 
-                                          (second cp) circ-dim circ-dim))
+                        :checker-obj (new Ellipse2D$Double cpx cpy circ-dim circ-dim))
         sq-entry (assoc square :checker move-chk)]
     {:read-board (assoc (assoc read-board chk-ind (assoc checker :checker nil)) 
                         sq-ind 

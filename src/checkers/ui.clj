@@ -10,6 +10,7 @@
 
 ;for using doc function!
 (use 'clojure.repl) 
+(use 'clojure.set)
 
 (def scale 100)
 (def dim 80)
@@ -179,6 +180,14 @@
                                    (set (filter some? (clojure.set/union prev-next #{lk} #{rk})))))
       paths)))
 
+(defn add-next [key key-func nks paths]
+  (let [c-key (new-key key key-func)
+        {next :next :as entry} (paths c-key)]
+    (if (some? entry)
+      (assoc paths c-key (assoc entry :next
+                                   (set (filter some? (clojure.set/union next nks)))))
+      paths)))
+
 (defn move-checker [[chk-ind {{team :team} :checker :as checker}] 
                     [sq-ind {{[sqx sqy] :point} :square :as square}] 
                     read-board]
@@ -194,33 +203,42 @@
                         sq-entry)
      :new-entry [sq-ind sq-entry]}))
 
+(defn get-keys [num-keys key-bag]
+  (let [ks (take num-keys key-bag)]
+    [ks (difference key-bag (set ks))]))
+
+(defn get-key-bag [num-keys ub]
+  (set (repeatedly num-keys #(rand-int ub))))
+
 (defn all-jump-paths [[ind {chk :checker 
                       {[team _] :team} :checker 
-                      :as square} :as entry] read-board curr-key res]
-  (let [{left :left right :right} (jump-paths entry read-board)
-        next-key (inc (inc curr-key))]
+                      :as square} :as entry] read-board curr-key key-bag res]
+  (let [{left :left right :right} (jump-paths entry read-board)]
 	      (cond
-	        (and (some? left) (some? right)) (let [[lk left-entry] [(keyword (str "p" curr-key)) {:path left :next #{}}]
+	        (and (some? left) (some? right)) (let [[[lk rk] nkb] (get-keys 2 key-bag)
+                                                  left-entry {:path left :next #{}}
 																			            {left-rb :read-board
 																			             nlc :new-entry} (move-checker entry (last left) read-board)
-																			            [rk right-entry] [(keyword (str "p" (inc curr-key))) {:path right :next #{}}]
+																			            right-entry {:path right :next #{}}
 																			            {right-rb :read-board
 																			             nrc :new-entry} (move-checker entry (last right) read-board)
-                                                   new-res (update-prev-next curr-key [lk rk] res)]
-	                                        (let [[li left-res] (all-jump-paths nlc left-rb next-key (assoc new-res lk left-entry))
-	                                              [ri right-res] (all-jump-paths nrc right-rb li (assoc new-res rk right-entry))]
-	                                             [ri (merge left-res right-res)]))
-	        (some? left) (let [[lk left-entry] [(keyword (str "p" curr-key)) {:path left :next #{}}]
-									            new-res res;(update-prev-next curr-key [lk nil] res)
-									            {left-rb :read-board
-									             nlc :new-entry} (move-checker entry (last left) read-board)]
-	                       (all-jump-paths nlc left-rb next-key (assoc new-res lk left-entry)))
-	        (some? right) (let [[rk right-entry] [(keyword (str "p" (inc curr-key))) {:path right :next #{}}]
-									            new-res (update-prev-next curr-key [rk nil] res)
+                                                   new-res (add-next curr-key #{lk rk} res)]
+	                                        (let [left-res (all-jump-paths nlc left-rb lk nkb (assoc new-res lk left-entry))
+	                                              right-res (all-jump-paths nrc right-rb rk nkb (assoc new-res rk right-entry))]
+	                                             (merge left-res right-res)))
+	        (some? left) (let [[[lk] nkb] (get-keys 1 key-bag)
+                             left-entry {:path left :next #{}}
+									           new-res (add-next curr-key #{lk} res)
+									           {left-rb :read-board
+									            nlc :new-entry} (move-checker entry (last left) read-board)]
+	                       (all-jump-paths nlc left-rb (inc curr-key) nkb (assoc new-res lk left-entry)))
+	        (some? right) (let [[[rk] nkb] (get-keys 1 key-bag)
+                              right-entry {:path right :next #{}}
+									            new-res (add-next curr-key #{rk} res)
 									            {right-rb :read-board
 									             nrc :new-entry} (move-checker entry (last right) read-board)]
-									                       (all-jump-paths nrc right-rb next-key (assoc new-res rk right-entry)))
-	        :else [curr-key res])))
+									                       (all-jump-paths nrc right-rb (inc curr-key) nkb (assoc new-res rk right-entry)))
+	        :else res)))
 
 (defn valid-move? [checker square read-board]
   (if (and (some? checker) (some? square)) 

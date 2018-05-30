@@ -210,6 +210,11 @@
 (defn get-key-bag [num-keys ub]
   (set (repeatedly num-keys #(rand-int ub))))
 
+(defn ajp []
+  (let [key-bag (get-key-bag 10000 (* 10000 10000))
+        [fk kb] (get-keys 1 key-bag)]
+  (all-jump-paths (get-hl-checker) @board fk kb {})))
+
 (defn all-jump-paths [[ind {chk :checker 
                       {[team _] :team} :checker 
                       :as square} :as entry] read-board curr-key key-bag res]
@@ -223,21 +228,21 @@
 																			            right-entry {:path right :next #{}}
 																			            {right-rb :read-board
 																			             nrc :new-entry} (move-checker entry (last right) read-board)
-                                                   new-res (add-next curr-key #{lk rk} res)]
+                                                   new-res (add-next curr-key (fn [x] x) #{lk rk} res)]
 	                                        (let [left-res (all-jump-paths nlc left-rb nlk nkb (assoc new-res lk left-entry))
 	                                              right-res (all-jump-paths nrc right-rb nrk nkb (assoc new-res rk right-entry))]
 	                                             (merge left-res right-res)))
 	        (some? left) (let [[[nlk] nkb] (get-keys 1 key-bag)
                              lk (keyword (str "p" nlk))
                              left-entry {:path left :next #{}}
-									           new-res (add-next curr-key #{lk} res)
+									           new-res (add-next curr-key (fn [x] x) #{lk} res)
 									           {left-rb :read-board
 									            nlc :new-entry} (move-checker entry (last left) read-board)]
 	                       (all-jump-paths nlc left-rb nlk nkb (assoc new-res lk left-entry)))
 	        (some? right) (let [[[nrk] nkb] (get-keys 1 key-bag)
                               rk (keyword (str "p" nrk))
                               right-entry {:path right :next #{}}
-									            new-res (add-next curr-key #{rk} res)
+									            new-res (add-next curr-key (fn [x] x) #{rk} res)
 									            {right-rb :read-board
 									             nrc :new-entry} (move-checker entry (last right) read-board)]
 									                       (all-jump-paths nrc right-rb nrk nkb (assoc new-res rk right-entry)))

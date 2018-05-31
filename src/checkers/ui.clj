@@ -55,11 +55,6 @@
                                                              :team (if (contains? t1-rows r)
                                                                     [:team1 (. Color yellow)]
                                                                     [:team2 (. Color magenta)]) 
-                                                             
-                                                             ;(cond 
-                                                             ;  (contains? t1-rows r) [:team1 (. Color yellow)]
-                                                             ;  (contains? t2-rows r) [:team2 (. Color magenta)]
-                                                             ;  :else nil)
                                                              :valid-click-locs []
                                                              :checker-obj (new Ellipse2D$Double (first cp) 
                                                                                (second cp) circ-dim circ-dim)
@@ -216,9 +211,9 @@
 (defn all-jump-paths []
   (let [key-bag (get-key-bag 10000 (* 10000 10000))
         [[fk] kb] (get-keys 1 key-bag)
-        hl-checker (get-hl-checker)
-        paths (ajp hl-checker @board fk kb {})]
-  (assoc paths :start {:path hl-checker 
+        hl-c (hl-checker @board)
+        paths (ajp hl-c @board fk kb {})]
+  (assoc paths :start {:path hl-c 
                        :next (starting-keys paths)})))
 
 (defn starting-keys [paths]
@@ -268,6 +263,13 @@
                              (compute-all-moves checker read-board)))
     false))
 
+(defn hl-checker [read-board] (first 
+                                (filter some? 
+                                        (map-indexed (fn [index {ele :checker
+                                                                 {clicked :clicked} :checker :as entry}] 
+                                                       (when (and (some? ele) clicked)
+                                                         [index entry])) read-board))))
+
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
             (let [read-board (get-board)
@@ -280,19 +282,16 @@
                   clicked-square (first (filter #(and (some? %) (= (((second %) :square) :color) (. Color black)))
                                                            (map-indexed #(find-clicked %1 %2 :square :square-obj) read-board)))
                   clicked-checker (first (filter some? (map-indexed #(find-clicked %1 %2 :checker :checker-obj) read-board)))
-                  hl-checker (first (filter some? (map-indexed (fn [index ele] 
-                                                  (when (and (some? (ele :checker)) ((ele :checker) :clicked))
-                                                    [index ele])) read-board)))
                   update-clicked (fn [ele val] (when (some? ele)
                                                  (reset! board (assoc @board (first ele) 
                                                                       (assoc (second ele) :checker 
                                                                              (assoc ((second ele) :checker) :clicked val))))))
-                  move? (valid-move? hl-checker clicked-square read-board)]
+                  move? (valid-move? (hl-checker read-board) clicked-square read-board)]
 
                 (if move?
-                  (reset! board ((move-checker hl-checker clicked-square read-board) :read-board))
+                  (reset! board ((move-checker (hl-checker read-board) clicked-square read-board) :read-board))
                   (do
-                    (update-clicked hl-checker false)
+                    (update-clicked (hl-checker read-board) false)
                     (update-clicked clicked-checker true)))
                 (. panel (repaint))))))
 

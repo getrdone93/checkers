@@ -208,13 +208,24 @@
 (defn get-key-bag [num-keys ub]
   (set (repeatedly num-keys #(rand-int ub))))
 
-(defn all-jump-paths []
-  (let [key-bag (get-key-bag 10000 (* 10000 10000))
+(defn hl-checker [read-board] (first 
+                                (filter some? 
+                                        (map-indexed (fn [index {ele :checker
+                                                                 {clicked :clicked} :checker :as entry}] 
+                                                       (when (and (some? ele) clicked)
+                                                         [index entry])) read-board))))
+
+(defn all-jump-paths [checker read-board]
+  (let [key-bag (get-key-bag 100 (* 100 100))
         [[fk] kb] (get-keys 1 key-bag)
-        hl-c (hl-checker @board)
-        paths (ajp hl-c @board fk kb {})]
-  (assoc paths :start {:path hl-c 
+        paths (ajp checker read-board fk kb {})]
+  (assoc paths :start {:path checker 
                        :next (starting-keys paths)})))
+
+;(defn valid-paths [checker read-board]
+;  (let [sp (simple-paths checker read-board)
+;        jp (all-jump-paths checker read-board)]
+;    ))
 
 (defn starting-keys [paths]
   (difference (set (keys paths)) ((fn keys-in-ns [ps res] 
@@ -263,12 +274,11 @@
                              (compute-all-moves checker read-board)))
     false))
 
-(defn hl-checker [read-board] (first 
-                                (filter some? 
-                                        (map-indexed (fn [index {ele :checker
-                                                                 {clicked :clicked} :checker :as entry}] 
-                                                       (when (and (some? ele) clicked)
-                                                         [index entry])) read-board))))
+;(defn new-valid-move [paths {from :from
+;                             to :to} read-board]
+;  (let [{path :path
+;         } (paths :start)]
+;    ))
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 

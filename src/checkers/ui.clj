@@ -143,15 +143,18 @@
                 {[st _] :team} :checker} :as se] 
             [mi {mc :checker} :as me]
             [ei {ec :checker} :as ee]]
-  (when (and (some? mc) (not= st (first (mc :team))) (nil? ec))
+  (when (and (some? se) (some? me) (some? ee) (some? mc) (not= st (first (mc :team))) (nil? ec))
     [me ee]))
 
 (defn jump-squares [start-index df read-board] 
   (let [mid-index (df start-index)
-        end-index (df mid-index)]
-    (filter some? (filter (fn [x] (when (some? (second x)) x))
+        end-index (df mid-index)
+        res (filter some? (filter (fn [x] (when (some? (second x)) x))
                           [[mid-index (move mid-index read-board)] 
-                           [end-index (move end-index read-board)]]))))
+                           [end-index (move end-index read-board)]]))]
+    (if (= 2 (count res))
+           res
+           nil)))
 
 (defn jump-paths [[ind {chk :checker 
                       {[team _] :team} :checker 
@@ -213,40 +216,42 @@
 (defn ajp []
   (let [key-bag (get-key-bag 10000 (* 10000 10000))
         [fk kb] (get-keys 1 key-bag)]
-  (all-jump-paths (get-hl-checker) @board fk kb {})))
+  (all-jump-paths (get-hl-checker) @board fk kb {})
+  ;use fk to create entry and add to its next set the symbols that are not in a next set
+  ))
 
 (defn all-jump-paths [[ind {chk :checker 
                       {[team _] :team} :checker 
                       :as square} :as entry] read-board curr-key key-bag res]
   (let [{left :left right :right} (jump-paths entry read-board)]
-	      (cond
-	        (and (some? left) (some? right)) (let [[[nlk nrk] nkb] (get-keys 2 key-bag)
-                                                  [lk rk] [(keyword (str "p" nlk)) (keyword (str "p" nrk))]
-                                                  left-entry {:path left :next #{}}
-																			            {left-rb :read-board
-																			             nlc :new-entry} (move-checker entry (last left) read-board)
-																			            right-entry {:path right :next #{}}
-																			            {right-rb :read-board
-																			             nrc :new-entry} (move-checker entry (last right) read-board)
-                                                   new-res (add-next curr-key (fn [x] x) #{lk rk} res)]
-	                                        (let [left-res (all-jump-paths nlc left-rb nlk nkb (assoc new-res lk left-entry))
-	                                              right-res (all-jump-paths nrc right-rb nrk nkb (assoc new-res rk right-entry))]
-	                                             (merge left-res right-res)))
-	        (some? left) (let [[[nlk] nkb] (get-keys 1 key-bag)
-                             lk (keyword (str "p" nlk))
-                             left-entry {:path left :next #{}}
-									           new-res (add-next curr-key (fn [x] x) #{lk} res)
-									           {left-rb :read-board
-									            nlc :new-entry} (move-checker entry (last left) read-board)]
-	                       (all-jump-paths nlc left-rb nlk nkb (assoc new-res lk left-entry)))
-	        (some? right) (let [[[nrk] nkb] (get-keys 1 key-bag)
-                              rk (keyword (str "p" nrk))
-                              right-entry {:path right :next #{}}
-									            new-res (add-next curr-key (fn [x] x) #{rk} res)
-									            {right-rb :read-board
-									             nrc :new-entry} (move-checker entry (last right) read-board)]
-									                       (all-jump-paths nrc right-rb nrk nkb (assoc new-res rk right-entry)))
-	        :else res)))
+    (cond
+	     (and (some? left) (some? right)) (let [[[nlk nrk] nkb] (get-keys 2 key-bag)
+                                               [lk rk] [(keyword (str "p" nlk)) (keyword (str "p" nrk))]
+                                               left-entry {:path left :next #{}}
+																			         {left-rb :read-board
+																			          nlc :new-entry} (move-checker entry (last left) read-board)
+																			         right-entry {:path right :next #{}}
+																			         {right-rb :read-board
+																			          nrc :new-entry} (move-checker entry (last right) read-board)
+                                                new-res (add-next curr-key (fn [x] x) #{lk rk} res)]
+	                                     (let [left-res (all-jump-paths nlc left-rb nlk nkb (assoc new-res lk left-entry))
+	                                           right-res (all-jump-paths nrc right-rb nrk nkb (assoc new-res rk right-entry))]
+	                                          (merge left-res right-res)))
+	     (some? left) (let [[[nlk] nkb] (get-keys 1 key-bag)
+                          lk (keyword (str "p" nlk))
+                          left-entry {:path left :next #{}}
+									        new-res (add-next curr-key (fn [x] x) #{lk} res)
+									        {left-rb :read-board
+									         nlc :new-entry} (move-checker entry (last left) read-board)]
+	                    (all-jump-paths nlc left-rb nlk nkb (assoc new-res lk left-entry)))
+	     (some? right) (let [[[nrk] nkb] (get-keys 1 key-bag)
+                           rk (keyword (str "p" nrk))
+                           right-entry {:path right :next #{}}
+									         new-res (add-next curr-key (fn [x] x) #{rk} res)
+									         {right-rb :read-board
+									          nrc :new-entry} (move-checker entry (last right) read-board)]
+									                    (all-jump-paths nrc right-rb nrk nkb (assoc new-res rk right-entry)))
+	     :else res)))
 
 (defn valid-move? [checker square read-board]
   (if (and (some? checker) (some? square)) 

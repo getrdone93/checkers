@@ -215,10 +215,11 @@
 
 (defn ajp []
   (let [key-bag (get-key-bag 10000 (* 10000 10000))
-        [fk kb] (get-keys 1 key-bag)]
-  (all-jump-paths (get-hl-checker) @board fk kb {})
-  
-  ))
+        [[fk] kb] (get-keys 1 key-bag)
+        hl-checker (get-hl-checker)
+        paths (all-jump-paths hl-checker @board fk kb {})]
+  (assoc paths :start {(new-key fk (fn [x] x)) hl-checker 
+                       :next (starting-keys paths)})))
 
 (defn starting-keys [paths]
   (difference (set (keys paths)) ((fn keys-in-ns [ps res] 
@@ -293,7 +294,6 @@
                   (do
                     (update-clicked hl-checker false)
                     (update-clicked clicked-checker true)))
-                
                 (. panel (repaint))))))
 
 (defn frame [] (doto 

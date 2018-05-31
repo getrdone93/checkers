@@ -217,8 +217,18 @@
   (let [key-bag (get-key-bag 10000 (* 10000 10000))
         [fk kb] (get-keys 1 key-bag)]
   (all-jump-paths (get-hl-checker) @board fk kb {})
-  ;use fk to create entry and add to its next set the symbols that are not in a next set
+  
   ))
+
+(defn starting-keys [paths]
+                       (let [keys-in-ns ((fn [ps res] 
+                                           (let [[_ pm] (first ps)]
+                                             (if (nil? pm)
+                                             res
+                                             (recur (rest ps) 
+                                                  (union res (pm :next)))))) 
+                                          paths #{})]
+                         (difference (set (keys paths)) keys-in-ns)))
 
 (defn all-jump-paths [[ind {chk :checker 
                       {[team _] :team} :checker 

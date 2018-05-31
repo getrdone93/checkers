@@ -221,14 +221,12 @@
   ))
 
 (defn starting-keys [paths]
-                       (let [keys-in-ns ((fn [ps res] 
-                                           (let [[_ pm] (first ps)]
-                                             (if (nil? pm)
-                                             res
-                                             (recur (rest ps) 
-                                                  (union res (pm :next)))))) 
-                                          paths #{})]
-                         (difference (set (keys paths)) keys-in-ns)))
+  (difference (set (keys paths)) ((fn [ps res] 
+										                    (let [[_ pm] (first ps)]
+										                      (if (nil? pm)
+										                      res
+										                      (recur (rest ps) 
+										                           (union res (pm :next)))))) paths #{})))
 
 (defn all-jump-paths [[ind {chk :checker 
                       {[team _] :team} :checker 

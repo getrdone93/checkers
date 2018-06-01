@@ -105,18 +105,6 @@
   [ind] 
   (and (< 0 ind) (< ind num-squares)))
 
-(defn compute-all-moves
-  "compute moves for the highlighted checker"
-  [[chk-ind {chk :checker 
-             {[team _] :team} 
-             :checker :as checker}] read-board]
-  (let [v1 ((first (move-func team)) chk-ind)
-        v2 ((second (move-func team)) chk-ind)]
-    (filter some? [(when (valid-index? v1)
-                     (read-board v1))
-                   (when (valid-index? v2)
-                     (read-board v2))])))
-
 (defn move [ind read-board] 
   (when (and (valid-index? ind) (= black (((read-board ind) :square) :color)))
     (read-board ind)))
@@ -269,12 +257,6 @@
                        :next (starting-keys paths)})))
 
 
-(defn valid-move? [checker square read-board]
-  (if (and (some? checker) (some? square)) 
-    (reduce #(or %1 %2) (map #(= % (second square)) 
-                             (compute-all-moves checker read-board)))
-    false))
-
 (defn valid-simple-move? [{from :from
                         to :to} read-board]
   (let [{left :left right :right} (simple-paths from read-board)]
@@ -289,8 +271,8 @@
                                   (last (x :path))) (map jp next)))) to)
           false)))
 
-(defn new-valid-move? [{from :from
-                        to :to :as move} read-board]
+(defn valid-move? [{from :from
+                    to :to :as move} read-board]
   (if (and (some? from) (some? to)) 
     (let [sm (valid-simple-move? move read-board)]
         (or sm (valid-jump-move? move read-board)))
@@ -315,7 +297,7 @@
                                                  (reset! board (assoc @board (first ele) 
                                                                       (assoc (second ele) :checker 
                                                                              (assoc ((second ele) :checker) :clicked val))))))
-                  move? (new-valid-move? {:from hl-c
+                  move? (valid-move? {:from hl-c
                                           :to clicked-square} read-board)]
 
                 (if move?

@@ -203,11 +203,6 @@
                                                        (when (and (some? ele) clicked)
                                                          [index entry])) read-board))))
 
-;(defn valid-paths [checker read-board]
-;  (let [sp (simple-paths checker read-board)
-;        jp (all-jump-paths checker read-board)]
-;    ))
-
 (defn ajp [[ind {chk :checker 
                       {[team _] :team} :checker 
                       :as square} :as entry] read-board curr-key key-bag res]

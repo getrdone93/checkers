@@ -215,25 +215,10 @@
                                                        (when (and (some? ele) clicked)
                                                          [index entry])) read-board))))
 
-(defn all-jump-paths [checker read-board]
-  (let [key-bag (get-key-bag 100 (* 100 100))
-        [[fk] kb] (get-keys 1 key-bag)
-        paths (ajp checker read-board fk kb {})]
-  (assoc paths :start {:path checker 
-                       :next (starting-keys paths)})))
-
 ;(defn valid-paths [checker read-board]
 ;  (let [sp (simple-paths checker read-board)
 ;        jp (all-jump-paths checker read-board)]
 ;    ))
-
-(defn starting-keys [paths]
-  (difference (set (keys paths)) ((fn keys-in-ns [ps res] 
-										                    (let [[_ pm] (first ps)]
-										                      (if (nil? pm)
-										                      res
-										                      (keys-in-ns (rest ps) 
-										                           (union res (pm :next)))))) paths #{})))
 
 (defn ajp [[ind {chk :checker 
                       {[team _] :team} :checker 
@@ -268,17 +253,41 @@
 									                    (ajp nrc right-rb nrk nkb (assoc new-res rk right-entry)))
 	     :else res)))
 
+(defn starting-keys [paths]
+  (difference (set (keys paths)) ((fn keys-in-ns [ps res] 
+										                    (let [[_ pm] (first ps)]
+										                      (if (nil? pm)
+										                      res
+										                      (keys-in-ns (rest ps) 
+										                           (union res (pm :next)))))) paths #{})))
+
+(defn all-jump-paths [checker read-board]
+  (let [key-bag (get-key-bag 100 (* 100 100))
+        [[fk] kb] (get-keys 1 key-bag)
+        paths (ajp checker read-board fk kb {})]
+  (assoc paths :start {:path checker 
+                       :next (starting-keys paths)})))
+
+
 (defn valid-move? [checker square read-board]
   (if (and (some? checker) (some? square)) 
     (reduce #(or %1 %2) (map #(= % (second square)) 
                              (compute-all-moves checker read-board)))
     false))
 
-;(defn new-valid-move [paths {from :from
-;                             to :to} read-board]
-;  (let [{path :path
-;         } (paths :start)]
-;    ))
+(defn new-valid-move? [{from :from
+                        to :to} read-board]
+  (let [{left :left right :right} (simple-paths from read-board)
+        {start-jp :start
+          {se :path} :start
+          {next :next} :start :as jp} (all-jump-paths from read-board)
+        next-ent (map jp next)
+        jump-ent (not-empty (filter #(= to %) (map (fn [x] 
+                                             (last (x :path))) next-ent)))]
+    (or (contains? #{left right} to)
+         (some? jump-ent))))
+
+;(load-file "/home/tanderson/git/checkers/src/checkers/ui.clj")
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
@@ -289,6 +298,7 @@
                                                                        (. mouse-event (getX)) 
                                                                        (. mouse-event (getY)))))
                                        [index ele]))
+                  hl-c (hl-checker read-board)
                   clicked-square (first (filter #(and (some? %) (= (((second %) :square) :color) (. Color black)))
                                                            (map-indexed #(find-clicked %1 %2 :square :square-obj) read-board)))
                   clicked-checker (first (filter some? (map-indexed #(find-clicked %1 %2 :checker :checker-obj) read-board)))
@@ -296,12 +306,14 @@
                                                  (reset! board (assoc @board (first ele) 
                                                                       (assoc (second ele) :checker 
                                                                              (assoc ((second ele) :checker) :clicked val))))))
-                  move? (valid-move? (hl-checker read-board) clicked-square read-board)]
+                  move? (valid-move? hl-c clicked-square read-board)]
+                  ;move? (new-valid-move? {:from (hl-checker read-board)
+                  ;                        :to clicked-square} read-board)]
 
                 (if move?
-                  (reset! board ((move-checker (hl-checker read-board) clicked-square read-board) :read-board))
+                  (reset! board ((move-checker hl-c clicked-square read-board) :read-board))
                   (do
-                    (update-clicked (hl-checker read-board) false)
+                    (update-clicked hl-c false)
                     (update-clicked clicked-checker true)))
                 (. panel (repaint))))))
 

@@ -132,12 +132,16 @@
 (defn jump-squares [start-index df read-board] 
   (let [mid-index (df start-index)
         end-index (df mid-index)
-        res (filter some? (filter (fn [x] (when (some? (second x)) x))
+        res (filter some? (filter (fn [x] 
+                                    (when (some? (second x)) 
+                                      x))
                           [[mid-index (move mid-index read-board)] 
                            [end-index (move end-index read-board)]]))]
     (if (= 2 (count res))
            res
-           nil)))
+           nil)
+    ;could be a when here
+    ))
 
 (defn jump-paths [[ind {chk :checker 
                       {[team _] :team} :checker 
@@ -250,7 +254,6 @@
         paths (ajp checker read-board fk kb {})]
   (assoc paths :start {:path checker 
                        :next (starting-keys paths)})))
-
 
 (defn valid-simple-move? [{from :from
                         to :to} read-board]

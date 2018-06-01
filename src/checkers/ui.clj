@@ -275,17 +275,26 @@
                              (compute-all-moves checker read-board)))
     false))
 
-(defn new-valid-move? [{from :from
+(defn valid-simple-move? [{from :from
                         to :to} read-board]
-  (let [{left :left right :right} (simple-paths from read-board)
-        {start-jp :start
-          {se :path} :start
-          {next :next} :start :as jp} (all-jump-paths from read-board)
-        next-ent (map jp next)
-        jump-ent (not-empty (filter #(= to %) (map (fn [x] 
-                                             (last (x :path))) next-ent)))]
-    (or (contains? #{left right} to)
-         (some? jump-ent))))
+  (let [{left :left right :right} (simple-paths from read-board)]
+    (and (not= from to) (or (= to left) (= to right)))))
+
+(defn valid-jump-move? [{from :from
+                        to :to} read-board]
+  (let [{{next :next} :start :as jp} (all-jump-paths from read-board)]
+        (if (some? jp)
+          (= (first (filter #(= to %) 
+                            (map (fn [x] 
+                                  (last (x :path))) (map jp next)))) to)
+          false)))
+
+(defn new-valid-move? [{from :from
+                        to :to :as move} read-board]
+  (if (and (some? from) (some? to)) 
+    (let [sm (valid-simple-move? move read-board)]
+        (or sm (valid-jump-move? move read-board)))
+    false))
 
 ;(load-file "/home/tanderson/git/checkers/src/checkers/ui.clj")
 
@@ -306,9 +315,8 @@
                                                  (reset! board (assoc @board (first ele) 
                                                                       (assoc (second ele) :checker 
                                                                              (assoc ((second ele) :checker) :clicked val))))))
-                  move? (valid-move? hl-c clicked-square read-board)]
-                  ;move? (new-valid-move? {:from (hl-checker read-board)
-                  ;                        :to clicked-square} read-board)]
+                  move? (new-valid-move? {:from hl-c
+                                          :to clicked-square} read-board)]
 
                 (if move?
                   (reset! board ((move-checker hl-c clicked-square read-board) :read-board))

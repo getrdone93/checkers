@@ -269,12 +269,22 @@
                                   (last (x :path))) (map jp next)))) to)
           false)))
 
+(defn paths [checker read-board]
+  {:simple-paths (simple-paths checker read-board)
+   :all-jump-paths (all-jump-paths checker read-board)})
+
 (defn valid-move? [{from :from
-                    to :to :as move} read-board]
-  (if (and (some? from) (some? to)) 
-    (let [sm (valid-simple-move? move read-board)]
-        (or sm (valid-jump-move? move read-board)))
-    false))
+                     to :to :as move} read-board]
+  (if (and (some? from) (some? to))
+	  (let [{{left :left right :right} :simple-paths :as sps ajps :all-jump-paths} (paths from read-board)
+	        valid-jump (valid-jump-move? move read-board)
+	        valid-simple (valid-simple-move? move read-board)]
+	    {:simple-paths sps :all-jump-paths ajps :valid-move (or valid-jump valid-simple)
+	     :move-type (cond 
+	                  valid-jump :all-jump-paths
+	                  valid-simple :simple-paths
+	                  :else nil)})
+	  false))
 
 ;(load-file "/home/tanderson/git/checkers/src/checkers/ui.clj")
 
@@ -295,8 +305,8 @@
                                                  (reset! board (assoc @board (first ele) 
                                                                       (assoc (second ele) :checker 
                                                                              (assoc ((second ele) :checker) :clicked val))))))
-                  move? (valid-move? {:from hl-c
-                                          :to clicked-square} read-board)]
+                  {move? :valid-move :as move-data} (valid-move? {:from hl-c
+                                                                      :to clicked-square} read-board)]
 
                 (if move?
                   (reset! board ((move-checker hl-c clicked-square read-board) :read-board))

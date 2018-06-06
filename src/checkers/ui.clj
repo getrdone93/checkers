@@ -259,9 +259,8 @@
                        :next (starting-keys paths)})))
 
 (defn valid-simple-move? [{from :from
-                        to :to} read-board]
-  (let [{left :left right :right} (simple-paths from read-board)]
-    (and (not= from to) (or (= to left) (= to right)))))
+                        to :to} {left :left right :right} read-board]
+    (and (not= from to) (or (= to left) (= to right))))
 
 (defn valid-jump-move? [{from :from
                         to :to} {{next :next} :start :as jp} read-board]
@@ -278,9 +277,10 @@
 (defn valid-move? [{from :from
                      to :to :as move} read-board]
   (if (and (some? from) (some? to))
-	  (let [{{left :left right :right} :simple-paths :as sps ajps :all-jump-paths} (paths from read-board)
+	  (let [{sps :simple-paths 
+          ajps :all-jump-paths} (paths from read-board)
 	        valid-jump (valid-jump-move? move ajps read-board)
-	        valid-simple (valid-simple-move? move read-board)]
+	        valid-simple (valid-simple-move? move sps read-board)]
 	    {:simple-paths sps :all-jump-paths ajps :valid-move (or (some? valid-jump) valid-simple)
 	     :move-type (cond 
 	                  (some? valid-jump) :all-jump-paths

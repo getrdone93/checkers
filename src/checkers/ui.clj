@@ -178,8 +178,11 @@
                                    (set (filter some? (clojure.set/union next nks)))))
       paths)))
 
-(defn move-checker [[chk-ind {{team :team} :checker :as checker}] 
-                    [sq-ind {{[sqx sqy] :point} :square :as square}] 
+(defn move-checker [{[chk-ind {{team :team} :checker :as checker}] :from
+                     [sq-ind {{[sqx sqy] :point} :square :as square}] :to}
+;                    
+;                    [chk-ind {{team :team} :checker :as checker}] 
+;                    [sq-ind {{[sqx sqy] :point} :square :as square}] 
                     read-board]
   (let [[cpx cpy] (checker-point sqx sqy)
         move-chk (assoc (checker :checker) 
@@ -216,10 +219,10 @@
                                                [lk rk] [(keyword (str "p" nlk)) (keyword (str "p" nrk))]
                                                left-entry {:path left :next #{}}
 																			         {left-rb :read-board
-																			          nlc :new-entry} (move-checker entry (last left) read-board)
+																			          nlc :new-entry} (move-checker {:from entry :to (last left)} read-board)
 																			         right-entry {:path right :next #{}}
 																			         {right-rb :read-board
-																			          nrc :new-entry} (move-checker entry (last right) read-board)
+																			          nrc :new-entry} (move-checker {:from entry :to (last right)} read-board)
                                                 new-res (add-next curr-key (fn [x] x) #{lk rk} res)]
 	                                     (let [left-res (ajp nlc left-rb nlk nkb (assoc new-res lk left-entry))
 	                                           right-res (ajp nrc right-rb nrk nkb (assoc new-res rk right-entry))]
@@ -229,14 +232,14 @@
                           left-entry {:path left :next #{}}
 									        new-res (add-next curr-key (fn [x] x) #{lk} res)
 									        {left-rb :read-board
-									         nlc :new-entry} (move-checker entry (last left) read-board)]
+									         nlc :new-entry} (move-checker {:from entry :to (last left)} read-board)]
 	                    (ajp nlc left-rb nlk nkb (assoc new-res lk left-entry)))
 	     (some? right) (let [[[nrk] nkb] (get-keys 1 key-bag)
                            rk (keyword (str "p" nrk))
                            right-entry {:path right :next #{}}
 									         new-res (add-next curr-key (fn [x] x) #{rk} res)
 									         {right-rb :read-board
-									          nrc :new-entry} (move-checker entry (last right) read-board)]
+									          nrc :new-entry} (move-checker {:from entry :to (last right)} read-board)]
 									                    (ajp nrc right-rb nrk nkb (assoc new-res rk right-entry)))
 	     :else res)))
 
@@ -261,13 +264,12 @@
     (and (not= from to) (or (= to left) (= to right)))))
 
 (defn valid-jump-move? [{from :from
-                        to :to} read-board]
-  (let [{{next :next} :start :as jp} (all-jump-paths from read-board)]
+                        to :to} {{next :next} :start :as jp} read-board]
         (if (some? jp)
-          (= (first (filter #(= to %) 
-                            (map (fn [x] 
-                                  (last (x :path))) (map jp next)))) to)
-          false)))
+          (first (filter some? (map (fn [key]
+                                      (when (= (last ((key jp) :path)) to)
+                                        key)) next)))
+          nil))
 
 (defn paths [checker read-board]
   {:simple-paths (simple-paths checker read-board)
@@ -277,14 +279,27 @@
                      to :to :as move} read-board]
   (if (and (some? from) (some? to))
 	  (let [{{left :left right :right} :simple-paths :as sps ajps :all-jump-paths} (paths from read-board)
-	        valid-jump (valid-jump-move? move read-board)
+	        valid-jump (valid-jump-move? move ajps read-board)
 	        valid-simple (valid-simple-move? move read-board)]
-	    {:simple-paths sps :all-jump-paths ajps :valid-move (or valid-jump valid-simple)
+	    {:simple-paths sps :all-jump-paths ajps :valid-move (or (some? valid-jump) valid-simple)
 	     :move-type (cond 
-	                  valid-jump :all-jump-paths
+	                  (some? valid-jump) :all-jump-paths
 	                  valid-simple :simple-paths
-	                  :else nil)})
+	                  :else nil) :ajp-move-key valid-jump})
 	  false))
+
+(defn remove-jumped-chks [{jp :all-jump-paths
+                           move-key :ajp-move-key :as move-data} read-board]
+  (if (some? move-key)
+	    (let [v (println "jp: " jp)
+            v (println "move-key: " move-key)
+            v (println "(jp move-key): " (jp move-key))
+            [jci jc] (first ((jp move-key) :path))]
+       (assoc read-board jci (assoc jc :checker nil)))
+	    read-board))
+
+(defn remove-checker [[ci entry] read-board]
+  (assoc read-board ci (assoc entry :checker nil)))
 
 ;(load-file "/home/tanderson/git/checkers/src/checkers/ui.clj")
 
@@ -307,12 +322,25 @@
                                                                              (assoc ((second ele) :checker) :clicked val))))))
                   {move? :valid-move :as move-data} (valid-move? {:from hl-c
                                                                       :to clicked-square} read-board)]
-
-                (if move?
-                  (reset! board ((move-checker hl-c clicked-square read-board) :read-board))
-                  (do
+              (if move?
+                (do
+                (reset! board ((move-checker {:from hl-c
+                                              :to clicked-square} 
+                                             (remove-jumped-chks move-data read-board)) :read-board))
+;                (reset! board ((move-checker {:from hl-c
+;                                              :to clicked-square} read-board) :read-board))
+                )
+                (do
                     (update-clicked hl-c false)
                     (update-clicked clicked-checker true)))
+              
+              
+
+;                (if move?
+;                  (reset! board ((move-checker hl-c clicked-square read-board) :read-board))
+;                  (do
+;                    (update-clicked hl-c false)
+;                    (update-clicked clicked-checker true)))
                 (. panel (repaint))))))
 
 (defn frame [] (doto 

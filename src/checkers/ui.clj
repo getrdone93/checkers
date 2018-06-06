@@ -137,11 +137,8 @@
                                       x))
                           [[mid-index (move mid-index read-board)] 
                            [end-index (move end-index read-board)]]))]
-    (if (= 2 (count res))
-           res
-           nil)
-    ;could be a when here
-    ))
+    (when (= 2 (count res))
+      res)))
 
 (defn jump-paths [[ind {chk :checker 
                       {[team _] :team} :checker 

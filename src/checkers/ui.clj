@@ -323,21 +323,10 @@
                 (do
                 (reset! board ((move-checker {:from hl-c
                                               :to clicked-square} 
-                                             (remove-jumped-chks move-data read-board)) :read-board))
-;                (reset! board ((move-checker {:from hl-c
-;                                              :to clicked-square} read-board) :read-board))
-                )
+                                             (remove-jumped-chks move-data read-board)) :read-board)))
                 (do
                     (update-clicked hl-c false)
                     (update-clicked clicked-checker true)))
-              
-              
-
-;                (if move?
-;                  (reset! board ((move-checker hl-c clicked-square read-board) :read-board))
-;                  (do
-;                    (update-clicked hl-c false)
-;                    (update-clicked clicked-checker true)))
                 (. panel (repaint))))))
 
 (defn frame [] (doto 

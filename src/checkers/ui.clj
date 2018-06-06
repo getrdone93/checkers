@@ -291,10 +291,7 @@
 (defn remove-jumped-chks [{jp :all-jump-paths
                            move-key :ajp-move-key :as move-data} read-board]
   (if (some? move-key)
-	    (let [v (println "jp: " jp)
-            v (println "move-key: " move-key)
-            v (println "(jp move-key): " (jp move-key))
-            [jci jc] (first ((jp move-key) :path))]
+	    (let [[jci jc] (first ((jp move-key) :path))]
        (assoc read-board jci (assoc jc :checker nil)))
 	    read-board))
 

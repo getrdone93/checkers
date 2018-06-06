@@ -180,9 +180,6 @@
 
 (defn move-checker [{[chk-ind {{team :team} :checker :as checker}] :from
                      [sq-ind {{[sqx sqy] :point} :square :as square}] :to}
-;                    
-;                    [chk-ind {{team :team} :checker :as checker}] 
-;                    [sq-ind {{[sqx sqy] :point} :square :as square}] 
                     read-board]
   (let [[cpx cpy] (checker-point sqx sqy)
         move-chk (assoc (checker :checker) 

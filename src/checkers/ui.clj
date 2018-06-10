@@ -284,6 +284,12 @@
                         to :to} {left :left right :right} read-board]
     (and (not= from to) (or (= to left) (= to right))))
 
+(defn valid-simple-move-new? [{from :from
+                               to :to} sps read-board]
+   (and (not= from to) (reduce #(or %1 %2) 
+                               (map (fn [e]
+                                     (= to e)) sps))))
+
 (defn valid-jump-move? [{from :from
                         to :to} {{next :next} :start :as jp} read-board]
         (if (some? jp)
@@ -293,7 +299,7 @@
           nil))
 
 (defn paths [checker read-board]
-  {:simple-paths (simple-paths checker read-board)
+  {:simple-paths (simple-paths-new checker read-board)
    :all-jump-paths (all-jump-paths checker read-board)})
 
 (defn valid-move? [{from :from
@@ -302,7 +308,7 @@
 	  (let [{sps :simple-paths 
           ajps :all-jump-paths} (paths from read-board)
 	        valid-jump (valid-jump-move? move ajps read-board)
-	        valid-simple (valid-simple-move? move sps read-board)]
+	        valid-simple (valid-simple-move-new? move sps read-board)]
 	    {:simple-paths sps :all-jump-paths ajps :valid-move (or (some? valid-jump) valid-simple)
 	     :ajp-move-key valid-jump})
 	  false))

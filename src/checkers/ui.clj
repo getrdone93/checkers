@@ -143,13 +143,21 @@
         right-ent [(right ind) (move (right ind) read-board)]]
     {:left (check-square left-ent) :right (check-square right-ent)}))
 
-(defn simple-paths-new [[ind {chk :checker 
-                          :as square} :as entry] read-board]
-    (map (fn [ind]
-           (check-square [ind (move ind read-board)])) 
-         (map 
-           (fn [mf] 
-             (mf ind)) all-move-funcs)))
+(defn gen-simple-moves [[ind {chk :checker 
+                          :as square} :as entry] funcs read-board]
+    (set (map (fn [ind]
+                (check-square [ind (move ind read-board)])) 
+              (map 
+                (fn [mf] 
+                  (mf ind)) funcs))))
+
+(defn simple-paths-new [[ind {chk :checker
+                          {[team _] :team
+                           king :king} :checker} :as entry] read-board]
+    (let [norm-moves (gen-simple-moves entry (move-func team) read-board)]
+      (if king
+        (union norm-moves (gen-simple-moves entry all-move-funcs read-board))
+        norm-moves)))
 
 (defn jump [[si {sc :checker 
                 {[st _] :team} :checker} :as se] 

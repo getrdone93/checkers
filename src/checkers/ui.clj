@@ -135,14 +135,6 @@
   (when (and (some? square) (nil? chk))
     entry))
 
-(defn simple-paths [[ind {chk :checker 
-                      {[team _] :team} :checker 
-                      :as square} :as entry] read-board]
-  (let [[left right] (move-func team)
-        left-ent [(left ind) (move (left ind) read-board)]
-        right-ent [(right ind) (move (right ind) read-board)]]
-    {:left (check-square left-ent) :right (check-square right-ent)}))
-
 (defn gen-simple-moves [[ind {chk :checker 
                           :as square} :as entry] funcs read-board]
     (set (map (fn [ind]
@@ -151,7 +143,7 @@
                 (fn [mf] 
                   (mf ind)) funcs))))
 
-(defn simple-paths-new [[ind {chk :checker
+(defn simple-paths [[ind {chk :checker
                           {[team _] :team
                            king :king} :checker} :as entry] read-board]
     (let [norm-moves (gen-simple-moves entry (move-func team) read-board)]
@@ -289,11 +281,7 @@
                        :next (starting-keys paths)})))
 
 (defn valid-simple-move? [{from :from
-                        to :to} {left :left right :right} read-board]
-    (and (not= from to) (or (= to left) (= to right))))
-
-(defn valid-simple-move-new? [{from :from
-                               to :to} sps read-board]
+                           to :to} sps read-board]
    (and (not= from to) (reduce #(or %1 %2) 
                                (map (fn [e]
                                      (= to e)) sps))))
@@ -307,7 +295,7 @@
           nil))
 
 (defn paths [checker read-board]
-  {:simple-paths (simple-paths-new checker read-board)
+  {:simple-paths (simple-paths checker read-board)
    :all-jump-paths (all-jump-paths checker read-board)})
 
 (defn valid-move? [{from :from
@@ -316,7 +304,7 @@
 	  (let [{sps :simple-paths 
           ajps :all-jump-paths} (paths from read-board)
 	        valid-jump (valid-jump-move? move ajps read-board)
-	        valid-simple (valid-simple-move-new? move sps read-board)]
+	        valid-simple (valid-simple-move? move sps read-board)]
 	    {:simple-paths sps :all-jump-paths ajps :valid-move (or (some? valid-jump) valid-simple)
 	     :ajp-move-key valid-jump})
 	  false))

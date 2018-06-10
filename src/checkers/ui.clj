@@ -183,11 +183,6 @@
 (defn new-key [key c-func]
   (keyword (str "p" (c-func key))))
 
-(defn look-back [key]
-  (if (< (dec key) 0)
-    (new-key key (fn [x] x))
-    (new-key key dec)))
-
 (defn update-prev-next [key [lk rk] paths]
   (let [prev-key (new-key key dec)
         {prev-next :next :as prev-entry} (paths prev-key)]

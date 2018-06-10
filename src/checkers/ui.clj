@@ -130,6 +130,9 @@
   (when (and (valid-index? ind) (= black (((read-board ind) :square) :color)))
     (read-board ind)))
 
+(defn filter-nil [data]
+  (set (filter some? data)))
+
 (defn check-square [[_ {chk :checker
                         :as square} :as entry]]
   (when (and (some? square) (nil? chk))
@@ -179,6 +182,21 @@
         right-jump (jump entry (first right-jump-sqs) (second right-jump-sqs))]
     {:left left-jump
      :right right-jump}))
+
+(defn gen-jump-moves [[ind {{[team _] :team} :checker} 
+                       :as entry] funcs read-board] 
+  (filter-nil (set (map (fn [mf]
+                          (let [js (jump-squares ind mf read-board)]
+                            (jump entry (first js) (second js)))) funcs))))
+
+(defn jump-paths-new [[ind {chk :checker 
+                          {[team _] :team
+                           king :king} :checker} :as entry] read-board]
+  (let [norm-moves (gen-jump-moves entry (move-func team) read-board)]
+    (if king
+      (filter-nil (union norm-moves 
+                         (gen-jump-moves entry all-move-funcs read-board)))
+      norm-moves)))
 
 (defn new-key [key c-func]
   (keyword (str "p" (c-func key))))

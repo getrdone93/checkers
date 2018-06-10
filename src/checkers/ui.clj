@@ -17,6 +17,8 @@
 (def num-squares 64)
 (def team-color {:team1 (. Color yellow)
                  :team2 (. Color magenta)})
+(def king-ind {:team1 #{56 58 60 62}
+               :team2 #{1 3 5 7}})
 (def circ-dim (/ scale 2))
 (def circ-hl (+ circ-dim 9))
 (def shift (/ circ-dim 2))
@@ -58,7 +60,8 @@
                                                              :valid-click-locs []
                                                              :checker-obj (new Ellipse2D$Double (first cp) 
                                                                                (second cp) circ-dim circ-dim)
-                                                             :clicked false})})) 
+                                                             :clicked false
+                                                             :king false})})) 
                     br)))
 (def board (atom (gen-board 0 [])))
 
@@ -96,6 +99,14 @@
                                      (/ (* scale dim) 5)))))
 
 (defn get-board [] @board)
+
+(defn king-me [[ind {chk :checker
+                   {[team _] :team
+                    king :king} :checker :as entry}] read-board] 
+  (if (and (false? king) (contains? (king-ind team) ind))
+    (assoc read-board ind  
+           (assoc entry :checker (assoc chk :king true)))
+    read-board)) 
 
 (def move-func {:team2 [(fn [ind] (- ind 9)) (fn [ind] (- ind 7))]
                 :team1 [(fn [ind] (+ ind 9)) (fn [ind] (+ ind 7))]})
@@ -276,10 +287,7 @@
 	        valid-jump (valid-jump-move? move ajps read-board)
 	        valid-simple (valid-simple-move? move sps read-board)]
 	    {:simple-paths sps :all-jump-paths ajps :valid-move (or (some? valid-jump) valid-simple)
-	     :move-type (cond 
-	                  (some? valid-jump) :all-jump-paths
-	                  valid-simple :simple-paths
-	                  :else nil) :ajp-move-key valid-jump})
+	     :ajp-move-key valid-jump})
 	  false))
 
 (defn remove-jumped-chks [{jp :all-jump-paths
@@ -314,10 +322,10 @@
                   {move? :valid-move :as move-data} (valid-move? {:from hl-c
                                                                       :to clicked-square} read-board)]
               (if move?
-                (do
-                (reset! board ((move-checker {:from hl-c
-                                              :to clicked-square} 
-                                             (remove-jumped-chks move-data read-board)) :read-board)))
+                (reset! board (let [{board :read-board 
+                                     moved-entry :new-entry} (move-checker {:from hl-c :to clicked-square} 
+                                                                           (remove-jumped-chks move-data read-board))]
+                                (king-me moved-entry board)))
                 (do
                     (update-clicked hl-c false)
                     (update-clicked clicked-checker true)))

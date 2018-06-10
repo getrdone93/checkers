@@ -118,6 +118,9 @@
 (def move-func {:team2 [(fn [ind] (- ind 9)) (fn [ind] (- ind 7))]
                 :team1 [(fn [ind] (+ ind 9)) (fn [ind] (+ ind 7))]})
 
+(def all-move-funcs 
+  (flatten (map move-func (keys move-func))))
+
 (defn valid-index? 
   "performs a bounds check on ind"
   [ind] 
@@ -139,6 +142,14 @@
         left-ent [(left ind) (move (left ind) read-board)]
         right-ent [(right ind) (move (right ind) read-board)]]
     {:left (check-square left-ent) :right (check-square right-ent)}))
+
+(defn simple-paths-new [[ind {chk :checker 
+                          :as square} :as entry] read-board]
+    (map (fn [ind]
+           (check-square [ind (move ind read-board)])) 
+         (map 
+           (fn [mf] 
+             (mf ind)) all-move-funcs)))
 
 (defn jump [[si {sc :checker 
                 {[st _] :team} :checker} :as se] 
@@ -264,8 +275,7 @@
 										                           (union res (pm :next)))))) paths #{})))
 
 (defn all-jump-paths [checker read-board]
-  (let [key-bag (get-key-bag 100 (* 100 100))
-        [[fk] kb] (get-keys 1 key-bag)
+  (let [[[fk] kb] (get-keys 1 (get-key-bag 100 (* 100 100)))
         paths (ajp checker read-board fk kb {})]
   (assoc paths :start {:path checker 
                        :next (starting-keys paths)})))

@@ -22,6 +22,7 @@
 (def circ-dim (/ scale 2))
 (def circ-hl (+ circ-dim 9))
 (def shift (/ circ-dim 2))
+(def king-dim (/ circ-dim 2.4))
 (def t1-rows (set (range 0 3)))
 (def t2-rows (set (range 5 8)))
 (def checker-rows (clojure.set/union t1-rows t2-rows))
@@ -29,6 +30,7 @@
 (def red (. Color red))
 
 (defn hl-shift [cp] (- cp 4))
+(defn king-shift [cp] (+ cp 14))
 
 (defn checker-point [sqx sqy] [(+ sqx shift) (+ sqy shift)])
 
@@ -84,7 +86,10 @@
                     (.setColor im-graph (. Color green))
                     (.fillOval im-graph (hl-shift cx) (hl-shift cy) circ-hl circ-hl))
                   (.setColor im-graph (second (checker :team)))
-                  (.fillOval im-graph cx cy circ-dim circ-dim)))
+                  (.fillOval im-graph cx cy circ-dim circ-dim)
+                  (when (checker :king)
+                    (.setColor im-graph (. Color cyan))
+                    (.fillOval im-graph (king-shift cx) (king-shift cy) king-dim king-dim))))
             (draw-board (rest eles)))) read-board)
        (. g (drawImage img 0 0 nil))
        (. im-graph (dispose))))

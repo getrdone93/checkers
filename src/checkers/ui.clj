@@ -307,7 +307,7 @@
 									     p1-ne :new-entry} (move-checker {:from entry :to (last p1)} read-board)
                       {p2-rb :read-board
 									     p2-ne :new-entry} (move-checker {:from entry :to (last p2)} read-board)
-                      [p1kb p2kb] (get-keys (/ (count kb) 2) nkb)] 
+                      [p1kb p2kb] (get-keys (/ (count nkb) 2) nkb)] 
                   (merge (ajp-new2 p1-ne p1-rb p1k (set p1kb) (assoc new-res p1kw p1-entry))
                          (ajp-new2 p2-ne p2-rb p2k p2kb (assoc new-res p2kw p2-entry))))) jps)
       res)))

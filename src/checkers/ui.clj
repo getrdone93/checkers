@@ -190,8 +190,8 @@
                             (jump entry (first js) (second js)))) funcs))))
 
 (defn jump-paths-new [[ind {chk :checker 
-                          {[team _] :team
-                           king :king} :checker} :as entry] read-board]
+                           {[team _] :team
+                            king :king} :checker} :as entry] read-board]
   (let [norm-moves (gen-jump-moves entry (move-func team) read-board)]
     (if king
       (filter-nil (union norm-moves 
@@ -279,6 +279,40 @@
 									                    (ajp nrc right-rb nrk nkb (assoc new-res rk right-entry)))
 	     :else res)))
 
+(defn ajp-new [[ind {chk :checker 
+                          {[team _] :team} :checker 
+                          :as square} :as entry] read-board curr-key key-bag res]
+  (let [jps (jump-paths-new entry read-board)]
+    (if (some? jps)
+      (reduce #((fn [rc1 rc2]
+                 (merge (eval rc1) (eval rc2))) %1 %2)  
+              (map #((fn [path key-bag entry read-board] (let [[[nk] nkb] (get-keys 1 key-bag)
+                                                              {new-rb :read-board
+									                                                       ne :new-entry} (move-checker {:from entry :to (last path)} read-board)
+                                                              new-res (add-next curr-key (fn [x] x) #{nk} res)]
+                               [ajp-new ne new-rb nk nkb (assoc new-res nk {:path path :next #{}})])) %1 key-bag entry read-board) jps))
+      res)))
+
+(defn ajp-new2 [[ind {chk :checker 
+                          {[team _] :team} :checker 
+                          :as square} :as entry] read-board curr-key key-bag res]
+  (let [jps (jump-paths-new entry read-board)]
+    (if (some? jps)
+      (reduce (fn [p1 p2]
+                (let [[[p1k p2k] nkb] (get-keys 2 key-bag)
+                      [p1kw p2kw] [(keyword (str "p" p1k)) (keyword (str "p" p2k))]
+                      [p1-entry p2-entry] [{:path p1 :next #{}} {:path p2 :next #{}}]
+									    new-res (add-next curr-key (fn [x] x) #{p1k p2k} res)
+									    {p1-rb :read-board
+									     p1-ne :new-entry} (move-checker {:from entry :to (last p1)} read-board)
+                      {p2-rb :read-board
+									     p2-ne :new-entry} (move-checker {:from entry :to (last p2)} read-board)
+                      [p1kb p2kb] (get-keys (/ (count kb) 2) nkb)] 
+                  (merge (ajp-new2 p1-ne p1-rb p1k (set p1kb) (assoc new-res p1kw p1-entry))
+                         (ajp-new2 p2-ne p2-rb p2k p2kb (assoc new-res p2kw p2-entry))))) jps)
+      res)))
+
+
 (defn starting-keys [paths]
   (difference (set (keys paths)) ((fn keys-in-ns [ps res] 
 										                    (let [[_ pm] (first ps)]
@@ -289,7 +323,9 @@
 
 (defn all-jump-paths [checker read-board]
   (let [[[fk] kb] (get-keys 1 (get-key-bag 100 (* 100 100)))
-        paths (ajp checker read-board fk kb {})]
+        ;paths (ajp checker read-board fk kb {})
+        paths (ajp-new2 checker read-board fk kb {})
+        ]
   (assoc paths :start {:path checker 
                        :next (starting-keys paths)})))
 

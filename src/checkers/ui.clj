@@ -290,8 +290,8 @@
 		                          {p1-rb :read-board
 			                          p1-ne :new-entry} (move-checker {:from entry :to (last (first jps))} read-board)
                               [p1kb p2kb] (get-keys 10 nkb)
-                              new-es (conj expl-set ind)
-                              ji (first (first jps))]
+                              ji (first (second (first jps)))
+                              new-es (conj expl-set ind)]
                           (if (contains? new-es ji)
                             (ajp-new3 entry read-board curr-key p2kb new-res (rest jps) new-es)
                             (merge (ajp-new3 p1-ne p1-rb p1k (set p1kb) new-res (jump-paths-new p1-ne p1-rb) new-es) 

@@ -246,39 +246,6 @@
                                                        (when (and (some? ele) clicked)
                                                          [index entry])) read-board))))
 
-(defn ajp [[ind {chk :checker 
-                      {[team _] :team} :checker 
-                      :as square} :as entry] read-board curr-key key-bag res]
-  (let [{left :left right :right} (jump-paths entry read-board)]
-    (cond
-	     (and (some? left) (some? right)) (let [[[nlk nrk] nkb] (get-keys 2 key-bag)
-                                               [lk rk] [(keyword (str "p" nlk)) (keyword (str "p" nrk))]
-                                               left-entry {:path left :next #{}}
-																			         {left-rb :read-board
-																			          nlc :new-entry} (move-checker {:from entry :to (last left)} read-board)
-																			         right-entry {:path right :next #{}}
-																			         {right-rb :read-board
-																			          nrc :new-entry} (move-checker {:from entry :to (last right)} read-board)
-                                                new-res (add-next curr-key (fn [x] x) #{lk rk} res)]
-	                                     (let [left-res (ajp nlc left-rb nlk nkb (assoc new-res lk left-entry))
-	                                           right-res (ajp nrc right-rb nrk nkb (assoc new-res rk right-entry))]
-	                                          (merge left-res right-res)))
-	     (some? left) (let [[[nlk] nkb] (get-keys 1 key-bag)
-                          lk (keyword (str "p" nlk))
-                          left-entry {:path left :next #{}}
-									        new-res (add-next curr-key (fn [x] x) #{lk} res)
-									        {left-rb :read-board
-									         nlc :new-entry} (move-checker {:from entry :to (last left)} read-board)]
-	                    (ajp nlc left-rb nlk nkb (assoc new-res lk left-entry)))
-	     (some? right) (let [[[nrk] nkb] (get-keys 1 key-bag)
-                           rk (keyword (str "p" nrk))
-                           right-entry {:path right :next #{}}
-									         new-res (add-next curr-key (fn [x] x) #{rk} res)
-									         {right-rb :read-board
-									          nrc :new-entry} (move-checker {:from entry :to (last right)} read-board)]
-									                    (ajp nrc right-rb nrk nkb (assoc new-res rk right-entry)))
-	     :else res)))
-
 (defn ajp-new3 [[ind {chk :checker 
                       {[team _] :team} :checker 
                       :as square} :as entry] read-board curr-key key-bag res jps expl-set]

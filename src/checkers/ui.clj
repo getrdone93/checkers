@@ -281,19 +281,23 @@
 
 (defn ajp-new3 [[ind {chk :checker 
                       {[team _] :team} :checker 
-                      :as square} :as entry] read-board curr-key key-bag res jps]
+                      :as square} :as entry] read-board curr-key key-bag res jps expl-set]
   (cond
     (some? (first jps)) (let [[[p1k] nkb] (get-keys 1 key-bag)
-							                p1kw (keyword (str "p" p1k))
-							                p1-entry {:path (first jps) :next #{}}
-														  new-res (assoc (add-next curr-key (fn [x] x) #{p1k} res) p1kw p1-entry)
-														  {p1-rb :read-board
-															  p1-ne :new-entry} (move-checker {:from entry :to (last (first jps))} read-board)
-							                [p1kb p2kb] (get-keys 10 nkb)]
-                                               (merge (ajp-new3 p1-ne p1-rb p1k (set p1kb) new-res (jump-paths-new p1-ne p1-rb)) 
-                                                      (ajp-new3 entry read-board curr-key p2kb new-res (rest jps))))
-    :else 
-       res))
+                              p1kw (keyword (str "p" p1k))
+                              p1-entry {:path (first jps) :next #{}}
+		                          new-res (assoc (add-next curr-key (fn [x] x) #{p1k} res) p1kw p1-entry)
+		                          {p1-rb :read-board
+			                          p1-ne :new-entry} (move-checker {:from entry :to (last (first jps))} read-board)
+                              [p1kb p2kb] (get-keys 10 nkb)
+                              new-es (conj expl-set ind)
+                              ji (first (first jps))]
+                          (if (contains? new-es ji)
+                            (ajp-new3 entry read-board curr-key p2kb new-res (rest jps) new-es)
+                            (merge (ajp-new3 p1-ne p1-rb p1k (set p1kb) new-res (jump-paths-new p1-ne p1-rb) new-es) 
+                                   (ajp-new3 entry read-board curr-key p2kb new-res (rest jps) new-es))))
+       :else 
+        res))
 
 
 (defn starting-keys [paths]
@@ -307,7 +311,7 @@
 (defn all-jump-paths [checker read-board]
   (let [[[fk] kb] (get-keys 1 (get-key-bag 100 (* 100 100)))
         ;paths-old (ajp checker read-board fk kb {})
-        paths (ajp-new3 checker read-board fk kb {} (jump-paths-new checker read-board))]
+        paths (ajp-new3 checker read-board fk kb {} (jump-paths-new checker read-board) #{})]
   (assoc paths :start {:path checker 
                        :next (starting-keys paths)})))
 

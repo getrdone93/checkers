@@ -246,7 +246,7 @@
                                                        (when (and (some? ele) clicked)
                                                          [index entry])) read-board))))
 
-(defn ajp-new3 [[ind {chk :checker 
+(defn ajp [[ind {chk :checker 
                       {[team _] :team} :checker 
                       :as square} :as entry] read-board curr-key key-bag res jps expl-set]
   (cond
@@ -260,9 +260,9 @@
                               ji (first (second (first jps)))
                               new-es (conj expl-set ind)]
                           (if (contains? new-es ji)
-                            (ajp-new3 entry read-board curr-key p2kb new-res (rest jps) new-es)
-                            (merge (ajp-new3 p1-ne p1-rb p1k (set p1kb) new-res (jump-paths-new p1-ne p1-rb) new-es) 
-                                   (ajp-new3 entry read-board curr-key p2kb new-res (rest jps) new-es))))
+                            (ajp entry read-board curr-key p2kb new-res (rest jps) new-es)
+                            (merge (ajp p1-ne p1-rb p1k (set p1kb) new-res (jump-paths-new p1-ne p1-rb) new-es) 
+                                   (ajp entry read-board curr-key p2kb new-res (rest jps) new-es))))
        :else 
         res))
 
@@ -277,8 +277,7 @@
 
 (defn all-jump-paths [checker read-board]
   (let [[[fk] kb] (get-keys 1 (get-key-bag 100 (* 100 100)))
-        ;paths-old (ajp checker read-board fk kb {})
-        paths (ajp-new3 checker read-board fk kb {} (jump-paths-new checker read-board) #{})]
+        paths (ajp checker read-board fk kb {} (jump-paths-new checker read-board) #{})]
   (assoc paths :start {:path checker 
                        :next (starting-keys paths)})))
 

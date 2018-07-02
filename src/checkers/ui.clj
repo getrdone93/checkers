@@ -304,12 +304,6 @@
 										                      (keys-in-ns (rest ps) 
 										                           (union res (pm :next)))))) paths #{})))
 
-;(defn all-jump-paths [checker read-board]
-;  (let [[[fk] kb] (get-keys 1 (get-key-bag 100 (* 100 100)))
-;        paths (ajp checker read-board fk kb {} (jump-paths-new checker read-board) #{})]
-;  (assoc paths :start {:path checker 
-;                       :next (starting-keys paths)})))
-
 (defn valid-simple-move? [{from :from
                            to :to} sps read-board]
    (and (not= from to) (reduce #(or %1 %2) 

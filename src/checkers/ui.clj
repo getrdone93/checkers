@@ -292,9 +292,9 @@
            (base-move (rest jumps) {:ajp ajp-res
                                     :read-board read-board
                                     :hi hi}))
-         res)) jps {:ajp (conj [] fe)
-                    :read-board read-board
-                    :hi 0})))
+         c-ajp)) jps {:ajp (conj [] fe)
+                      :read-board read-board
+                      :hi 0})))
 
 (defn starting-keys [paths]
   (difference (set (keys paths)) ((fn keys-in-ns [ps res] 
@@ -318,6 +318,14 @@
                                         key)) next)))
           nil))
 
+(defn valid-jump-move-new? [{from :from
+                            to :to} ajp read-board]
+  ((fn find-index [indicies]
+     (when (some? (first indicies))
+       (if (= to (last ((ajp (first indicies)) :path)))
+         (first indicies)
+         (find-index (rest indicies))))) ((first ajp) :next)))
+
 ;(all-jump-paths (hl-checker @board) @board)
 
 (defn paths [checker read-board]
@@ -329,10 +337,8 @@
   (if (and (some? from) (some? to))
 	  (let [{sps :simple-paths 
           ajps :all-jump-paths} (paths from read-board)
-	        valid-jump (valid-jump-move? move ajps read-board)
-	        valid-simple (valid-simple-move? move sps read-board)
-         v (def bvj valid-jump)
-         v (def bajps ajps)]
+	        valid-jump (valid-jump-move-new? move ajps read-board)
+	        valid-simple (valid-simple-move? move sps read-board)]
 	    {:simple-paths sps :all-jump-paths ajps :valid-move (or (some? valid-jump) valid-simple)
 	     :ajp-move-key valid-jump})
 	  false))

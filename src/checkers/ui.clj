@@ -311,15 +311,7 @@
                                      (= to e)) sps))))
 
 (defn valid-jump-move? [{from :from
-                        to :to} {{next :next} :start :as jp} read-board]
-        (if (some? jp)
-          (first (filter some? (map (fn [key]
-                                      (when (= (last ((key jp) :path)) to)
-                                        key)) next)))
-          nil))
-
-(defn valid-jump-move-new? [{from :from
-                            to :to} ajp read-board]
+                        to :to} ajp read-board]
   ((fn find-index [indicies]
      (when (some? (first indicies))
        (if (= to (last ((ajp (first indicies)) :path)))
@@ -337,7 +329,7 @@
   (if (and (some? from) (some? to))
 	  (let [{sps :simple-paths 
           ajps :all-jump-paths} (paths from read-board)
-	        valid-jump (valid-jump-move-new? move ajps read-board)
+	        valid-jump (valid-jump-move? move ajps read-board)
 	        valid-simple (valid-simple-move? move sps read-board)]
 	    {:simple-paths sps :all-jump-paths ajps :valid-move (or (some? valid-jump) valid-simple)
 	     :ajp-move-index valid-jump})

@@ -246,12 +246,12 @@
                                                        (when (and (some? ele) clicked)
                                                          [index entry])) read-board))))
 
-(defn ajp-new [[chk-ind {chk :checker 
-                              {[team _] :team} :checker 
-                              :as square} :as entry] {curr-ajp :ajp
-                                                      crb :read-board
-                                                      c-ajp-i :hi
-                                                      :as res} jumps]
+(defn ajp [[chk-ind {chk :checker 
+                          {[team _] :team} :checker 
+                          :as square} :as entry] {curr-ajp :ajp
+                                                  crb :read-board
+                                                  c-ajp-i :hi
+                                                  :as res} jumps]
   (if (some? (first jumps))
     (let [ni (inc c-ajp-i)
           nce (assoc (curr-ajp c-ajp-i) :next (conj ((curr-ajp c-ajp-i) :next) ni))
@@ -260,13 +260,13 @@
           {nrb :read-board
            ne :new-entry} (move-checker {:from entry :to (last (first jumps))} 
                                         (remove-checker (first (first jumps)) crb))]
-      (ajp-new ne {:ajp new-ajp 
+      (ajp ne {:ajp new-ajp 
                    :hi ni 
                    :read-board nrb} (rest jumps)))
     (let [jpn (jump-paths-new entry crb)]
       (if (empty? jpn)
         res
-        (ajp-new entry res jpn)))))
+        (ajp entry res jpn)))))
 
 ;(def ajp-res (all-jump-paths (hl-checker @board) @board))
 
@@ -286,7 +286,7 @@
                                              (remove-checker (first (first jumps)) crb))
                {ajp-res :ajp
                 nrb :read-board
-                hi :hi} (ajp-new ne {:ajp n-ajp 
+                hi :hi} (ajp ne {:ajp n-ajp 
                                      :read-board nrb
                                      :hi ni} (jump-paths-new ne nrb))]
            (base-move (rest jumps) {:ajp ajp-res

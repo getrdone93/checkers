@@ -293,8 +293,8 @@
                                     :read-board read-board
                                     :hi hi}))
          res)) jps {:ajp (conj [] fe)
-                   :read-board read-board
-                   :hi 0})))
+                    :read-board read-board
+                    :hi 0})))
 
 (defn starting-keys [paths]
   (difference (set (keys paths)) ((fn keys-in-ns [ps res] 

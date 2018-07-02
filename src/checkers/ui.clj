@@ -280,9 +280,9 @@
           {nrb :read-board
            ne :new-entry} (move-checker {:from entry :to (last (first jumps))} 
                                         (remove-checker (first (first jumps)) crb))]
-      (ajp-new ne ni {:ajp new-ajp 
-                      :hi ni 
-                      :read-board nrb} (rest jumps)))
+      (ajp-new ne {:ajp new-ajp 
+                   :hi ni 
+                   :read-board nrb} (rest jumps)))
     (let [jpn (jump-paths-new entry crb)]
       (if (empty? jpn)
         res

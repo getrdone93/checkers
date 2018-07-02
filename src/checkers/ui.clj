@@ -340,11 +340,11 @@
 	        valid-jump (valid-jump-move-new? move ajps read-board)
 	        valid-simple (valid-simple-move? move sps read-board)]
 	    {:simple-paths sps :all-jump-paths ajps :valid-move (or (some? valid-jump) valid-simple)
-	     :ajp-move-key valid-jump})
+	     :ajp-move-index valid-jump})
 	  false))
 
 (defn remove-jumped-chks [{jp :all-jump-paths
-                           move-key :ajp-move-key :as move-data} read-board]
+                           move-key :ajp-move-index :as move-data} read-board]
   (if (some? move-key)
 	    (let [[jci jc] (first ((jp move-key) :path))]
        (assoc read-board jci (assoc jc :checker nil)))

@@ -288,6 +288,8 @@
         res
         (ajp-new entry res jpn)))))
 
+;(def ajp-res (all-jump-paths (hl-checker @board) @board))
+
 (defn all-jump-paths [checker read-board]
   (let [jps (jump-paths-new checker read-board)
         fe {:path [checker] :next #{}}]
@@ -307,7 +309,7 @@
                 hi :hi} (ajp-new ne {:ajp n-ajp 
                                      :read-board nrb
                                      :hi ni} (jump-paths-new ne nrb))]
-           (base-move (rest jumps) {:ajp (vec (conj c-ajp ajp-res))
+           (base-move (rest jumps) {:ajp ajp-res
                                     :read-board read-board
                                     :hi hi}))
          res)) jps {:ajp (conj [] fe)

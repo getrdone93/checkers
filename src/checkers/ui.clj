@@ -1,5 +1,5 @@
 ;As with all journeys, it begins with a simple willingness, with an abiding faith in the unknown.
-(ns ui.core)
+(ns checkers.ui)
 
 (import 
  '(java.awt Color Graphics Dimension BorderLayout Shape)
@@ -172,17 +172,6 @@
     (when (= 2 (count res))
       res)))
 
-(defn jump-paths [[ind {chk :checker 
-                      {[team _] :team} :checker 
-                      :as square} :as entry] read-board]
-  (let [[left right] (move-func team)
-        left-jump-sqs (jump-squares ind left read-board)
-        left-jump (jump entry (first left-jump-sqs) (second left-jump-sqs))
-        right-jump-sqs (jump-squares ind right read-board)
-        right-jump (jump entry (first right-jump-sqs) (second right-jump-sqs))]
-    {:left left-jump
-     :right right-jump}))
-
 (defn gen-jump-moves [[ind {{[team _] :team} :checker} 
                        :as entry] funcs read-board] 
   (filter-nil (set (map (fn [mf]
@@ -201,21 +190,8 @@
 (defn new-key [key c-func]
   (keyword (str "p" (c-func key))))
 
-(defn update-prev-next [key [lk rk] paths]
-  (let [prev-key (new-key key dec)
-        {prev-next :next :as prev-entry} (paths prev-key)]
-    (if (some? prev-entry)
-      (assoc paths prev-key (assoc prev-entry :next
-                                   (set (filter some? (clojure.set/union prev-next #{lk} #{rk})))))
-      paths)))
-
-(defn add-next [key key-func nks paths]
-  (let [c-key (new-key key key-func)
-        {next :next :as entry} (paths c-key)]
-    (if (some? entry)
-      (assoc paths c-key (assoc entry :next
-                                   (set (filter some? (clojure.set/union next nks)))))
-      paths)))
+(defn remove-checker [[ci entry] read-board]
+  (assoc read-board ci (assoc entry :checker nil)))
 
 (defn move-checker [{[chk-ind {{team :team} :checker :as checker}] :from
                      [sq-ind {{[sqx sqy] :point} :square :as square}] :to}
@@ -231,13 +207,6 @@
                         sq-ind 
                         sq-entry)
      :new-entry [sq-ind sq-entry]}))
-
-(defn get-keys [num-keys key-bag]
-  (let [ks (take num-keys key-bag)]
-    [ks (difference key-bag (set ks))]))
-
-(defn get-key-bag [num-keys ub]
-  (set (repeatedly num-keys #(rand-int ub))))
 
 (defn hl-checker [read-board] (first 
                                 (filter some? 
@@ -260,49 +229,29 @@
           {nrb :read-board
            ne :new-entry} (move-checker {:from entry :to (last (first jumps))} 
                                         (remove-checker (first (first jumps)) crb))]
-      (ajp ne {:ajp new-ajp 
-                   :hi ni 
-                   :read-board nrb} (rest jumps)))
+      (ajp ne {:ajp new-ajp :hi ni :read-board nrb} (rest jumps)))
     (let [jpn (jump-paths-new entry crb)]
       (if (empty? jpn)
         res
         (ajp entry res jpn)))))
 
-;(def ajp-res (all-jump-paths (hl-checker @board) @board))
-
 (defn all-jump-paths [checker read-board]
   (let [jps (jump-paths-new checker read-board)
         fe {:path [checker] :next #{}}]
-    ((fn base-move [jumps {c-ajp :ajp 
-                           crb :read-board 
-                           chi :hi :as res}]
+    ((fn base-move [jumps {c-ajp :ajp crb :read-board chi :hi :as res}]
        (if (some? (first jumps))
          (let [ni (inc chi)
                temp-ajp (conj c-ajp {:path (first jumps) :next #{}})
                nfe (assoc (c-ajp 0) :next (conj ((c-ajp 0) :next) ni))
                n-ajp (assoc temp-ajp 0 nfe)
-               {nrb :read-board
-                ne :new-entry} (move-checker {:from checker :to (last (first jumps))} 
-                                             (remove-checker (first (first jumps)) crb))
-               {ajp-res :ajp
-                nrb :read-board
-                hi :hi} (ajp ne {:ajp n-ajp 
-                                     :read-board nrb
-                                     :hi ni} (jump-paths-new ne nrb))]
+               {nrb :read-board ne :new-entry} (move-checker {:from checker :to (last (first jumps))} 
+                                                             (remove-checker (first (first jumps)) crb))
+               {ajp-res :ajp nrb :read-board hi :hi} (ajp ne {:ajp n-ajp :read-board nrb :hi ni} 
+                                                          (jump-paths-new ne nrb))]
            (base-move (rest jumps) {:ajp ajp-res
                                     :read-board read-board
                                     :hi hi}))
-         c-ajp)) jps {:ajp (conj [] fe)
-                      :read-board read-board
-                      :hi 0})))
-
-(defn starting-keys [paths]
-  (difference (set (keys paths)) ((fn keys-in-ns [ps res] 
-										                    (let [[_ pm] (first ps)]
-										                      (if (nil? pm)
-										                      res
-										                      (keys-in-ns (rest ps) 
-										                           (union res (pm :next)))))) paths #{})))
+         c-ajp)) jps {:ajp (conj [] fe) :read-board read-board :hi 0})))
 
 (defn valid-simple-move? [{from :from
                            to :to} sps read-board]
@@ -317,8 +266,6 @@
        (if (= to (last ((ajp (first indicies)) :path)))
          (first indicies)
          (find-index (rest indicies))))) ((first ajp) :next)))
-
-;(all-jump-paths (hl-checker @board) @board)
 
 (defn paths [checker read-board]
   {:simple-paths (simple-paths checker read-board)
@@ -341,11 +288,6 @@
 	    (let [[jci jc] (first ((jp move-key) :path))]
        (assoc read-board jci (assoc jc :checker nil)))
 	    read-board))
-
-(defn remove-checker [[ci entry] read-board]
-  (assoc read-board ci (assoc entry :checker nil)))
-
-;(load-file "/home/tanderson/git/checkers/src/checkers/ui.clj")
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 

@@ -187,9 +187,6 @@
                          (gen-jump-moves entry all-move-funcs read-board)))
       norm-moves)))
 
-(defn new-key [key c-func]
-  (keyword (str "p" (c-func key))))
-
 (defn remove-checker [[ci entry] read-board]
   (assoc read-board ci (assoc entry :checker nil)))
 

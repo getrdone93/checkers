@@ -56,8 +56,6 @@
                                                              :king false})})) 
                     br)))
 
-(def board (atom (gen-board 0 [])))
-
 (defn king-me [[ind {chk :checker
                    {[team _] :team
                     king :king} :checker :as entry}] read-board] 
@@ -66,18 +64,13 @@
            (assoc entry :checker (assoc chk :king true)))
     read-board)) 
 
-(defn get-board [] @board)
-
 (def move-func {:team2 [(fn [ind] (- ind 9)) (fn [ind] (- ind 7))]
                 :team1 [(fn [ind] (+ ind 9)) (fn [ind] (+ ind 7))]})
-
 
 (def all-move-funcs 
   (flatten (map move-func (keys move-func))))
 
-(defn valid-index? 
-  "performs a bounds check on ind"
-  [ind] 
+(defn valid-index? [ind] 
   (and (< 0 ind) (< ind num-squares)))
 
 (defn move [ind read-board] 
@@ -232,5 +225,3 @@
 	    (let [[jci jc] (first ((jp move-key) :path))]
        (assoc read-board jci (assoc jc :checker nil)))
 	    read-board))
-
-

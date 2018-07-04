@@ -226,13 +226,12 @@
        (assoc read-board jci (assoc jc :checker nil)))
 	    read-board))
 
+(defn checker-count [team read-board] 
+  (count (filter some? (map #((fn [{{[chk-t _] :team} :checker :as entry} tm] 
+                                                       (when (= chk-t tm)
+                                                         entry)) % team) read-board))))
 (defn game-over [read-board] 
   (cond
     (= 0 (checker-count :team1)) :team2
     (= 0 (checker-count :team2)) :team1
     :else nil))
-
-(defn checker-count [team read-board] 
-  (count (filter some? (map #((fn [{{[chk-t _] :team} :checker :as entry} tm] 
-                                                       (when (= chk-t tm)
-                                                         entry)) % team) read-board))))

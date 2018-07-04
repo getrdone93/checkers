@@ -96,10 +96,15 @@
 (defn simple-paths [[ind {chk :checker
                           {[team _] :team
                            king :king} :checker} :as entry] read-board]
-    (let [norm-moves (gen-simple-moves entry (move-func team) read-board)]
-      (if king
-        (union norm-moves (gen-simple-moves entry all-move-funcs read-board))
-        norm-moves)))
+    (let [norm-moves (gen-simple-moves entry (move-func team) read-board)
+          res (if king
+                (union norm-moves (gen-simple-moves entry all-move-funcs read-board))
+                norm-moves)]
+      (if (= res #{nil})
+             nil
+             res)
+;res
+      ))
 
 (defn jump [[si {sc :checker 
                 {[st _] :team} :checker} :as se] 
@@ -174,35 +179,41 @@
 
 (defn all-jump-paths [checker read-board]
   (let [jps (jump-paths-new checker read-board)
-        fe {:path [checker] :next #{}}]
-    ((fn base-move [jumps {c-ajp :ajp crb :read-board chi :hi :as res}]
-       (if (some? (first jumps))
-         (let [ni (inc chi)
-               temp-ajp (conj c-ajp {:path (first jumps) :next #{}})
-               nfe (assoc (c-ajp 0) :next (conj ((c-ajp 0) :next) ni))
-               n-ajp (assoc temp-ajp 0 nfe)
-               {nrb :read-board ne :new-entry} (move-checker {:from checker :to (last (first jumps))} 
-                                                             (remove-checker (first (first jumps)) crb))
-               {ajp-res :ajp nrb :read-board hi :hi} (ajp ne {:ajp n-ajp :read-board nrb :hi ni} 
-                                                          (jump-paths-new ne nrb))]
-           (base-move (rest jumps) {:ajp ajp-res
-                                    :read-board read-board
-                                    :hi hi}))
-         c-ajp)) jps {:ajp (conj [] fe) :read-board read-board :hi 0})))
+        fe {:path [checker] :next #{}}
+        ajp-val ((fn base-move [jumps {c-ajp :ajp crb :read-board chi :hi :as res}]
+					         (if (some? (first jumps))
+					           (let [ni (inc chi)
+					                 temp-ajp (conj c-ajp {:path (first jumps) :next #{}})
+					                 nfe (assoc (c-ajp 0) :next (conj ((c-ajp 0) :next) ni))
+					                 n-ajp (assoc temp-ajp 0 nfe)
+					                 {nrb :read-board ne :new-entry} (move-checker {:from checker :to (last (first jumps))} 
+					                                                               (remove-checker (first (first jumps)) crb))
+					                 {ajp-res :ajp nrb :read-board hi :hi} (ajp ne {:ajp n-ajp :read-board nrb :hi ni} 
+					                                                            (jump-paths-new ne nrb))]
+					             (base-move (rest jumps) {:ajp ajp-res
+					                                      :read-board read-board
+					                                      :hi hi}))
+					           c-ajp)) jps {:ajp (conj [] fe) :read-board read-board :hi 0})]
+    (if (= ajp-val [fe])
+      nil
+      ajp-val)))
 
 (defn valid-simple-move? [{from :from
                            to :to} sps read-board]
    (and (not= from to) (reduce #(or %1 %2) 
                                (map (fn [e]
-                                     (= to e)) sps))))
+                                     (= to e)) (if (nil? sps)
+                                                 #{sps}
+                                                 sps)))))
 
 (defn valid-jump-move? [{from :from
                         to :to} ajp read-board]
-  ((fn find-index [indicies]
-     (when (some? (first indicies))
-       (if (= to (last ((ajp (first indicies)) :path)))
-         (first indicies)
-         (find-index (rest indicies))))) ((first ajp) :next)))
+  (when (some? ajp) 
+    ((fn find-index [indicies]
+       (when (some? (first indicies))
+         (if (= to (last ((ajp (first indicies)) :path)))
+           (first indicies)
+           (find-index (rest indicies))))) ((first ajp) :next))))
 
 (defn paths [checker read-board]
   {:simple-paths (simple-paths checker read-board)
@@ -218,6 +229,8 @@
 	    {:simple-paths sps :all-jump-paths ajps :valid-move (or (some? valid-jump) valid-simple)
 	     :ajp-move-index valid-jump})
 	  false))
+
+;(paths (hl-checker @board) @board)
 
 (defn remove-jumped-chks [{jp :all-jump-paths
                            move-key :ajp-move-index :as move-data} read-board]
@@ -235,3 +248,5 @@
     (= 0 (checker-count :team1 read-board)) :team2
     (= 0 (checker-count :team2 read-board)) :team1
     :else nil))
+
+

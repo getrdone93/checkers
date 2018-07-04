@@ -232,6 +232,6 @@
                                                          entry)) % team) read-board))))
 (defn game-over [read-board] 
   (cond
-    (= 0 (checker-count :team1)) :team2
-    (= 0 (checker-count :team2)) :team1
+    (= 0 (checker-count :team1 read-board)) :team2
+    (= 0 (checker-count :team2 read-board)) :team1
     :else nil))

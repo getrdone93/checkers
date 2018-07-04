@@ -9,16 +9,13 @@
  '(javax.swing JPanel JFrame JTextArea)
  '(java.awt.event MouseAdapter MouseEvent))
 
-;for using doc function!
-(use 'clojure.repl) 
-
 (def dim 80)
 (def circ-hl (+ circ-dim 9))
 (def king-dim (/ circ-dim 2.4))
-(defn hl-shift [cp] (- cp 4))
-(defn king-shift [cp] (+ cp 14))
 (def board (atom (gen-board 0 [])))
 (defn get-board [] @board)
+(defn hl-shift [cp] (- cp 4))
+(defn king-shift [cp] (+ cp 14))
 
 (defn color-frame [g read-board]
   (let [img (new BufferedImage (* scale dim) (* scale dim) 

@@ -102,9 +102,7 @@
                 norm-moves)]
       (if (= res #{nil})
              nil
-             res)
-;res
-      ))
+             res)))
 
 (defn jump [[si {sc :checker 
                 {[st _] :team} :checker} :as se] 

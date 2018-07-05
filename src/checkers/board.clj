@@ -237,10 +237,11 @@
        (assoc read-board jci (assoc jc :checker nil)))
 	    read-board))
 
-(defn checker-count [team read-board] 
-  (count (filter some? (map #((fn [{{[chk-t _] :team} :checker :as entry} tm] 
-                                                       (when (= chk-t tm)
-                                                         entry)) % team) read-board))))
+(defn checkers [team read-board] 
+  (set (filter some? (map #((fn [{{[chk-t _] :team} :checker :as entry} tm] 
+                                                     (when (= chk-t tm)
+                                                       entry)) % team) read-board))))
+
 (defn movable-checkers [team read-board]
   (set (filter some? (map-indexed #((fn [ind {{[t _] :team} :checker :as entry} tm]
                                       (when (and (= t tm) 
@@ -250,10 +251,10 @@
 
 (defn game-over [read-board] 
   (cond
-    (or (zero? (checker-count :team1 read-board)) 
-        (zero? (movable-checkers :team1 read-board))) :team2
-    (or (zero? (checker-count :team2 read-board))
-        (zero? (movable-checkers :team2 read-board))) :team1
+    (or (zero? (count (checkers :team1 read-board))) 
+        (zero? (count (movable-checkers :team1 read-board)))) :team2
+    (or (zero? (count (checkers :team2 read-board)))
+        (zero? (count (movable-checkers :team2 read-board)))) :team1
     :else nil))
 
 

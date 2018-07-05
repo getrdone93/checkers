@@ -155,6 +155,11 @@
                         sq-entry)
      :new-entry [sq-ind sq-entry]}))
 
+(defn exec-move-checker [move-data board-atom from-to read-board] 
+  (reset! board-atom (let [{board :read-board moved-entry :new-entry} 
+                           (move-checker from-to (remove-jumped-chks move-data read-board))]
+                                          (king-me moved-entry board))))
+
 (defn ajp [[chk-ind {chk :checker 
                           {[team _] :team} :checker 
                           :as square} :as entry] {curr-ajp :ajp

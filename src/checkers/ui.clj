@@ -81,10 +81,7 @@
                   {move? :valid-move :as move-data} (valid-move? {:from hl-c
                                                                       :to clicked-square} read-board)]
               (if move?
-                (reset! board (let [{board :read-board 
-                                     moved-entry :new-entry} (move-checker {:from hl-c :to clicked-square} 
-                                                                           (remove-jumped-chks move-data read-board))]
-                                (king-me moved-entry board)))
+                 (exec-move-checker move-data board {:from hl-c :to clicked-square} read-board)
                 (do
                     (update-clicked hl-c false)
                     (update-clicked clicked-checker true)))

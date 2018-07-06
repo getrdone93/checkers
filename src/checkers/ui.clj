@@ -1,6 +1,7 @@
 ;As with all journeys, it begins with a simple willingness, with an abiding faith in the unknown.
 (ns checkers.ui
-  (:refer checkers.board))
+  (:refer checkers.board)
+  (:refer checkers.random-player))
 
 (import 
  '(java.awt Color Graphics Dimension BorderLayout Shape)
@@ -80,12 +81,18 @@
                                                                              (assoc ((second ele) :checker) :clicked val))))))
                   {move? :valid-move :as move-data} (valid-move? {:from hl-c
                                                                       :to clicked-square} read-board)]
-              (if move?
-                 (exec-move-checker move-data board {:from hl-c :to clicked-square} read-board)
-                (do
-                    (update-clicked hl-c false)
-                    (update-clicked clicked-checker true)))
-                (. panel (repaint))))))
+             (if move?
+                (exec-move-checker move-data board {:from hl-c :to clicked-square} read-board)
+               (do
+                   (update-clicked hl-c false)
+                   (update-clicked clicked-checker true)))
+             (. panel (repaint))
+             
+             ;random player move should happen here
+             (let [rand-move (rand-chk-move read-board)]
+               (exec-move-checker (valid-move? rand-move read-board) board rand-move read-board))
+             (. panel (repaint))
+             ))))
 
 (defn frame [] (doto 
                  (new JFrame) 

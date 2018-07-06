@@ -102,7 +102,7 @@
                 norm-moves)]
       (if (= res #{nil})
              nil
-             res)))
+             (filter-nil res))))
 
 (defn jump [[si {sc :checker 
                 {[st _] :team} :checker} :as se] 
@@ -154,11 +154,6 @@
                         sq-ind 
                         sq-entry)
      :new-entry [sq-ind sq-entry]}))
-
-(defn exec-move-checker [move-data board-atom from-to read-board] 
-  (reset! board-atom (let [{board :read-board moved-entry :new-entry} 
-                           (move-checker from-to (remove-jumped-chks move-data read-board))]
-                                          (king-me moved-entry board))))
 
 (defn ajp [[chk-ind {chk :checker 
                           {[team _] :team} :checker 
@@ -249,10 +244,9 @@
 
 (defn movable-checkers [team read-board]
   (set (filter some? (map-indexed #((fn [ind {{[t _] :team} :checker :as entry} tm]
-                                      (when (and (= t tm) 
-                                                 (not= (set (vals 
-                                                              (paths [ind entry] read-board))) #{nil})) 
-                                        entry)) %1 %2 team) read-board))))
+                                      (let [paths (paths [ind entry] read-board)]
+                                        (when (and (= t tm) (not= (set (vals paths)) #{nil})) 
+                                          [[ind entry] paths]))) %1 %2 team) read-board))))
 
 (defn game-over [read-board] 
   (cond
@@ -263,3 +257,7 @@
     :else nil))
 
 
+(defn exec-move-checker [move-data board-atom from-to read-board] 
+  (reset! board-atom (let [{board :read-board moved-entry :new-entry} 
+                           (move-checker from-to (remove-jumped-chks move-data read-board))]
+                                          (king-me moved-entry board))))

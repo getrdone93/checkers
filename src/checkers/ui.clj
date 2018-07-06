@@ -90,10 +90,7 @@
                (do
                    (update-clicked hl-c false)
                    (update-clicked clicked-checker true)
-                   (. panel (repaint))))
-             
-             
-             ))))
+                   (. panel (repaint))))))))
 
 (defn frame [] (doto 
                  (new JFrame) 

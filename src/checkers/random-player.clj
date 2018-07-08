@@ -2,6 +2,7 @@
   (:refer checkers.board))
 
 (def team :team1)
+(def think-time-ms 300)
 
 
 (defn random-jump [ajp]

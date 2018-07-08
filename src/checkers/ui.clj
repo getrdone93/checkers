@@ -84,9 +84,11 @@
              (if move?
                (do 
                  (let [ub (exec-move-checker move-data board {:from hl-c :to clicked-square} read-board)]
-	                 (. panel (repaint))
+                   (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))
+                   (Thread/sleep think-time-ms)
 	                 (let [rand-move (rand-chk-move ub)]
-	                   (exec-move-checker (valid-move? rand-move ub) board rand-move ub))))
+	                   (exec-move-checker (valid-move? rand-move ub) board rand-move ub))
+                   (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))))
                (do
                    (update-clicked hl-c false)
                    (update-clicked clicked-checker true)

@@ -14,6 +14,7 @@
 (def circ-hl (+ circ-dim 9))
 (def king-dim (/ circ-dim 2.4))
 (def board (atom (gen-board 0 [])))
+(def human-team :team2)
 (defn get-board [] @board)
 (defn hl-shift [cp] (- cp 4))
 (defn king-shift [cp] (+ cp 14))
@@ -55,26 +56,30 @@
                                      (/ (* scale dim) 5)))))
 
 
-(defn hl-checker [read-board] (first 
-                                (filter some? 
-                                        (map-indexed (fn [index {ele :checker
-                                                                 {clicked :clicked} :checker :as entry}] 
-                                                       (when (and (some? ele) clicked)
-                                                         [index entry])) read-board))))
+(defn hl-checker [read-board] 
+  (first (filter some? (map-indexed (fn [index {ele :checker
+                                                {clicked :clicked} :checker :as entry}] 
+                                      (when (and (some? ele) clicked)
+                                        [index entry])) read-board))))
+
+(defn find-clicked [index ele key shapeKey mouse-event]
+  (when (and (some? (ele key)) (some? ((ele key) shapeKey)) 
+              (. ((ele key) shapeKey) (contains 
+                                        (. mouse-event (getX)) 
+                                        (. mouse-event (getY)))))
+                                              [index ele]))
+(defn find-clicked-chk [index ele key shapeKey mouse-event]
+  (let [[index {{[team _] :team} :checker} :as res] (find-clicked index ele key shapeKey mouse-event)]
+    (when (= team human-team)
+      res)))
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
             (let [read-board (get-board)
-                  find-clicked (fn [index ele key shapeKey]
-                                 (when (and (some? (ele key)) (some? ((ele key) shapeKey)) 
-                                             (. ((ele key) shapeKey) (contains 
-                                                                       (. mouse-event (getX)) 
-                                                                       (. mouse-event (getY)))))
-                                       [index ele]))
                   hl-c (hl-checker read-board)
                   clicked-square (first (filter #(and (some? %) (= (((second %) :square) :color) (. Color black)))
-                                                           (map-indexed #(find-clicked %1 %2 :square :square-obj) read-board)))
-                  clicked-checker (first (filter some? (map-indexed #(find-clicked %1 %2 :checker :checker-obj) read-board)))
+                                                           (map-indexed #(find-clicked %1 %2 :square :square-obj mouse-event) read-board)))
+                  clicked-checker (first (filter some? (map-indexed #(find-clicked-chk %1 %2 :checker :checker-obj mouse-event) read-board)))
                   update-clicked (fn [ele val] (when (some? ele)
                                                  (reset! board (assoc @board (first ele) 
                                                                       (assoc (second ele) :checker 

@@ -25,21 +25,20 @@
         im-graph (. img (getGraphics))]
        (.setColor im-graph (. Color white))
        (.fillRect im-graph 0 0 (. img (getWidth)) (. img (getHeight)))
-       ((fn draw-board [[{square :square
-                 {[sqx sqy] :point} :square
-                 checker :checker} :as eles]]
+       ((fn draw-board [[{{sqc :color sqclick :clicked [sqx sqy] :point} :square
+                 {[chkx chky] :point chkt :team chkc :clicked king :king :as checker} :checker} :as eles]]
           (when (not (empty? eles))  
-              (.setColor im-graph (square :color))
+              (.setColor im-graph (if sqclick green sqc))
               (.fillRect im-graph sqx sqy scale scale)
-              (when (and (= (square :color) black) (some? checker) (some? (checker :team)))
-                (let [cx (first (checker :point))
-                      cy (second (checker :point))]
-                  (when (checker :clicked)
+              (when (and (= sqc black) (some? checker) (some? chkt))
+                (let [cx chkx
+                      cy chky]
+                  (when chkc
                     (.setColor im-graph green)
                     (.fillOval im-graph (hl-shift cx) (hl-shift cy) circ-hl circ-hl))
-                  (.setColor im-graph (second (checker :team)))
+                  (.setColor im-graph (second chkt))
                   (.fillOval im-graph cx cy circ-dim circ-dim)
-                  (when (checker :king)
+                  (when king
                     (.setColor im-graph cyan)
                     (.fillOval im-graph (king-shift cx) (king-shift cy) king-dim king-dim))))
             (draw-board (rest eles)))) read-board)
@@ -79,7 +78,7 @@
                   hl-c (hl-checker read-board)
                   clicked-square (first (filter #(and (some? %) (= (((second %) :square) :color) (. Color black)))
                                                            (map-indexed #(find-clicked %1 %2 :square :square-obj mouse-event) read-board)))
-                  clicked-checker (first (filter some? (map-indexed #(find-clicked-chk %1 %2 :checker :checker-obj mouse-event) read-board)))
+                  clicked-checker (first (filter some? (map-indexed #(find-clicked %1 %2 :checker :checker-obj mouse-event) read-board)))
                   update-clicked (fn [ele val] (when (some? ele)
                                                  (reset! board (assoc @board (first ele) 
                                                                       (assoc (second ele) :checker 
@@ -90,10 +89,11 @@
                (do 
                  (let [ub (exec-move-checker move-data board {:from hl-c :to clicked-square} read-board)]
                    (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))
-                   (Thread/sleep think-time-ms)
-	                 (let [rand-move (rand-chk-move ub)]
-	                   (exec-move-checker (valid-move? rand-move ub) board rand-move ub))
-                   (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))))
+;                   (Thread/sleep think-time-ms)
+;	                 (let [rand-move (rand-chk-move ub)]
+;	                   (exec-move-checker (valid-move? rand-move ub) board rand-move ub))
+;                   (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))
+                   ))
                (do
                    (update-clicked hl-c false)
                    (update-clicked clicked-checker true)

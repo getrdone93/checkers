@@ -43,7 +43,8 @@
                     (gen-board (inc n) (conj br {:square {:point [x y]
                                                            :color c
                                                            :valid-click-locs []
-                                                           :square-obj (new Rectangle2D$Double x y scale scale)}
+                                                           :square-obj (new Rectangle2D$Double x y scale scale)
+                                                           :clicked false}
                                                  :checker (when (and (contains? checker-rows r) (= c black))
                                                             {:point cp
                                                              :team (if (contains? t1-rows r)
@@ -255,7 +256,6 @@
     (or (zero? (count (checkers :team2 read-board)))
         (zero? (count (movable-checkers :team2 read-board)))) :team1
     :else nil))
-
 
 (defn exec-move-checker [move-data board-atom from-to read-board] 
   (reset! board-atom (let [{board :read-board moved-entry :new-entry} 

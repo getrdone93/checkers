@@ -31,16 +31,14 @@
               (.setColor im-graph (if sqclick green sqc))
               (.fillRect im-graph sqx sqy scale scale)
               (when (and (= sqc black) (some? checker) (some? chkt))
-                (let [cx chkx
-                      cy chky]
-                  (when chkc
-                    (.setColor im-graph green)
-                    (.fillOval im-graph (hl-shift cx) (hl-shift cy) circ-hl circ-hl))
-                  (.setColor im-graph (second chkt))
-                  (.fillOval im-graph cx cy circ-dim circ-dim)
-                  (when king
-                    (.setColor im-graph cyan)
-                    (.fillOval im-graph (king-shift cx) (king-shift cy) king-dim king-dim))))
+                (when chkc
+                  (.setColor im-graph green)
+                  (.fillOval im-graph (hl-shift chkx) (hl-shift chky) circ-hl circ-hl))
+                (.setColor im-graph (second chkt))
+                (.fillOval im-graph chkx chky circ-dim circ-dim)
+                (when king
+                  (.setColor im-graph cyan)
+                  (.fillOval im-graph (king-shift chkx) (king-shift chky) king-dim king-dim)))
             (draw-board (rest eles)))) read-board)
        (. g (drawImage img 0 0 nil))
        (. im-graph (dispose))))

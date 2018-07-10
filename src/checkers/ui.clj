@@ -19,27 +19,28 @@
 (defn hl-shift [cp] (- cp 4))
 (defn king-shift [cp] (+ cp 14))
 
+(defn draw-board [im-graph [{{sqc :color sqclick :clicked [sqx sqy] :point} :square
+                             {[chkx chky] :point chkt :team chkc :clicked king :king :as checker} :checker} :as eles]]
+           (when (not (empty? eles))  
+               (.setColor im-graph (if sqclick green sqc))
+               (.fillRect im-graph sqx sqy scale scale)
+               (when (and (= sqc black) (some? checker) (some? chkt))
+                 (when chkc
+                   (.setColor im-graph green)
+                   (.fillOval im-graph (hl-shift chkx) (hl-shift chky) circ-hl circ-hl))
+                 (.setColor im-graph (second chkt))
+                 (.fillOval im-graph chkx chky circ-dim circ-dim)
+                 (when king
+                   (.setColor im-graph cyan)
+                   (.fillOval im-graph (king-shift chkx) (king-shift chky) king-dim king-dim)))
+             (draw-board im-graph (rest eles))))
+
 (defn color-frame [g read-board]
-  (let [img (new BufferedImage (* scale dim) (* scale dim) 
-         (. BufferedImage TYPE_INT_ARGB))
+  (let [img (new BufferedImage (* scale dim) (* scale dim) (. BufferedImage TYPE_INT_ARGB))
         im-graph (. img (getGraphics))]
        (.setColor im-graph (. Color white))
        (.fillRect im-graph 0 0 (. img (getWidth)) (. img (getHeight)))
-       ((fn draw-board [[{{sqc :color sqclick :clicked [sqx sqy] :point} :square
-                 {[chkx chky] :point chkt :team chkc :clicked king :king :as checker} :checker} :as eles]]
-          (when (not (empty? eles))  
-              (.setColor im-graph (if sqclick green sqc))
-              (.fillRect im-graph sqx sqy scale scale)
-              (when (and (= sqc black) (some? checker) (some? chkt))
-                (when chkc
-                  (.setColor im-graph green)
-                  (.fillOval im-graph (hl-shift chkx) (hl-shift chky) circ-hl circ-hl))
-                (.setColor im-graph (second chkt))
-                (.fillOval im-graph chkx chky circ-dim circ-dim)
-                (when king
-                  (.setColor im-graph cyan)
-                  (.fillOval im-graph (king-shift chkx) (king-shift chky) king-dim king-dim)))
-            (draw-board (rest eles)))) read-board)
+       (draw-board im-graph read-board)
        (. g (drawImage img 0 0 nil))
        (. im-graph (dispose))))
 

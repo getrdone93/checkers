@@ -15,6 +15,7 @@
 (def king-dim (/ circ-dim 2.4))
 (def board (atom (gen-board 0 [])))
 (def human-team :team2)
+
 (defn get-board [] @board)
 (defn hl-shift [cp] (- cp 4))
 (defn king-shift [cp] (+ cp 14))
@@ -39,12 +40,13 @@
   (println "clicked!"))
 
 (def submit-button
-  (let [sb (new JButton "submit")
-        v (. sb (setActionCommand "submit"))
-        v (. sb (setVerticalTextPosition (AbstractButton/CENTER)))
-        v (. sb (setHorizontalTextPosition (AbstractButton/LEADING)))
-        v (. sb (addActionListener (proxy [ActionListener] []
-                                     (actionPerformed [ae] (button-click ae)))))]
+  (let [sb (new JButton "SUBMIT MOVE")
+        _ (. sb (setVerticalTextPosition (AbstractButton/CENTER)))
+        _ (. sb (setHorizontalTextPosition (AbstractButton/LEADING)))
+        _ (. sb (addActionListener (proxy [ActionListener] []
+                                     (actionPerformed [ae] (button-click ae)))))
+        {{[x y] :point} :square} (last (get-board))
+        _ (. sb (setBounds 0 800 800 60))]
     sb))
 
 (defn color-frame [g read-board]
@@ -111,7 +113,8 @@
                    (. panel (repaint))))))))
 
 (defn frame [] (doto 
-                 (new JFrame) 
-                 (-> (.getContentPane) (.add panel) (.add submit-button) (.addMouseListener ml))
+                 (new JFrame)
+                 (-> (.getContentPane) (.add submit-button))
+                 (-> (.getContentPane) (.add panel) (.addMouseListener ml))
                  .pack 
                  .show))

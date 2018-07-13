@@ -45,8 +45,8 @@
         _ (. sb (setHorizontalTextPosition (AbstractButton/LEADING)))
         _ (. sb (addActionListener (proxy [ActionListener] []
                                      (actionPerformed [ae] (button-click ae)))))
-        {{[x y] :point} :square} (last (get-board))
-        _ (. sb (setBounds 0 (+ x 100) (+ y 100) 60))]
+        {{[_ y] :point} :square} (last (get-board))
+        _ (. sb (setBounds 0 (+ y 100) (+ y 100) 60))]
     sb))
 
 (defn color-frame [g read-board]

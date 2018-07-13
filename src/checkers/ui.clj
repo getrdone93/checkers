@@ -7,8 +7,8 @@
  '(java.awt Color Graphics Dimension BorderLayout Shape)
  '(java.awt.image BufferedImage)
  '(java.awt.geom Rectangle2D$Double Ellipse2D$Double)
- '(javax.swing JPanel JFrame JTextArea)
- '(java.awt.event MouseAdapter MouseEvent))
+ '(javax.swing JPanel JFrame JTextArea JButton AbstractButton)
+ '(java.awt.event MouseAdapter MouseEvent ActionListener))
 
 (def dim 80)
 (def circ-hl (+ circ-dim 9))
@@ -34,6 +34,18 @@
                    (.setColor im-graph cyan)
                    (.fillOval im-graph (king-shift chkx) (king-shift chky) king-dim king-dim)))
              (draw-board im-graph (rest eles))))
+
+(defn button-click [action-event]
+  (println "clicked!"))
+
+(def submit-button
+  (let [sb (new JButton "submit")
+        v (. sb (setActionCommand "submit"))
+        v (. sb (setVerticalTextPosition (AbstractButton/CENTER)))
+        v (. sb (setHorizontalTextPosition (AbstractButton/LEADING)))
+        v (. sb (addActionListener (proxy [ActionListener] []
+                                     (actionPerformed [ae] (button-click ae)))))]
+    sb))
 
 (defn color-frame [g read-board]
   (let [img (new BufferedImage (* scale dim) (* scale dim) (. BufferedImage TYPE_INT_ARGB))
@@ -100,6 +112,6 @@
 
 (defn frame [] (doto 
                  (new JFrame) 
-                 (-> (.getContentPane) (.add panel) (.addMouseListener ml))
+                 (-> (.getContentPane) (.add panel) (.add submit-button) (.addMouseListener ml))
                  .pack 
                  .show))

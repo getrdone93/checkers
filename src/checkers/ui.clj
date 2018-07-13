@@ -46,7 +46,7 @@
         _ (. sb (addActionListener (proxy [ActionListener] []
                                      (actionPerformed [ae] (button-click ae)))))
         {{[x y] :point} :square} (last (get-board))
-        _ (. sb (setBounds 0 800 800 60))]
+        _ (. sb (setBounds 0 (+ x 100) (+ y 100) 60))]
     sb))
 
 (defn color-frame [g read-board]

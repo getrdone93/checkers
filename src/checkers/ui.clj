@@ -94,31 +94,67 @@
   (first (filter some? 
                  (map-indexed #(find-func %1 %2 :checker :checker-obj mouse-event) read-board))))
 
+(defn valid-square? [checker square read-board]
+  (let [{sp :simple-paths ajp :all-jump-paths} (paths checker read-board)]
+    (or (some? (first (filter #(= square %) sp))) 
+        (some? (first (set (map (fn [{p :path}]
+                                (first (filter #(= 5 %) p))) ajp)))))))
+
+(defn update-clicked [ele uk val]
+  (when (some? ele)
+    (reset! board (assoc @board (first ele) 
+                         (assoc (second ele) uk 
+                                (assoc ((second ele) uk) :clicked val))))))
+
+(defn flip-clicked [[ind {{val :clicked} uk :as entry}] uk]
+  (when (some? entry) 
+      (reset! board (assoc @board ind 
+                           (assoc entry uk 
+                                  (assoc (entry uk) :clicked (not val)))))))
+
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
             (let [read-board (get-board)
                   hl-c (hl-checker read-board)
                   clicked-square (clicked-square mouse-event find-clicked read-board)
-                  clicked-checker (clicked-checker mouse-event find-clicked read-board)
-                  update-clicked (fn [ele val] (when (some? ele)
-                                                 (reset! board (assoc @board (first ele) 
-                                                                      (assoc (second ele) :checker 
-                                                                             (assoc ((second ele) :checker) :clicked val))))))
-                  {move? :valid-move :as move-data} (valid-move? {:from hl-c
-                                                                      :to clicked-square} read-board)]
-             (if move?
-               (do 
-                 (let [ub (exec-move-checker move-data board {:from hl-c :to clicked-square} read-board)]
-                   (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))
+                  clicked-checker (clicked-checker mouse-event find-clicked read-board)]
+             (do 
+               (cond 
+                 (and (nil? hl-c) (some? clicked-checker)) (flip-clicked clicked-checker :checker)
+                 (and (some? hl-c) (some? clicked-checker)) (do
+                                                              (flip-clicked hl-c :checker)
+                                                              (flip-clicked clicked-checker :checker))
+                 (and (some? hl-c) (some? clicked-square)) (when (valid-square? hl-c clicked-square read-board) 
+                                                             (flip-clicked clicked-square :square)))
+               
+               (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))
+             ))))
+
+;(def ml (proxy [MouseAdapter] []
+;          (mouseClicked [mouse-event] 
+;            (let [read-board (get-board)
+;                  hl-c (hl-checker read-board)
+;                  clicked-square (clicked-square mouse-event find-clicked read-board)
+;                  clicked-checker (clicked-checker mouse-event find-clicked read-board)
+;                  update-clicked (fn [ele val] (when (some? ele)
+;                                                 (reset! board (assoc @board (first ele) 
+;                                                                      (assoc (second ele) :checker 
+;                                                                             (assoc ((second ele) :checker) :clicked val))))))
+;                  {move? :valid-move :as move-data} (valid-move? {:from hl-c
+;                                                                      :to clicked-square} read-board)]
+;             (if move?
+;               (do 
+;                 (let [ub (exec-move-checker move-data board {:from hl-c :to clicked-square} read-board)]
+;                   (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))
 ;                   (Thread/sleep think-time-ms)
 ;	                 (let [rand-move (rand-chk-move ub)]
 ;	                   (exec-move-checker (valid-move? rand-move ub) board rand-move ub))
 ;                   (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))
-                   ))
-               (do
-                   (update-clicked hl-c false)
-                   (update-clicked clicked-checker true)
-                   (. panel (repaint))))))))
+;                   ))
+;               (do
+;                   (update-clicked hl-c false)
+;                   (update-clicked clicked-checker true)
+;                   (. panel (repaint))))))))
 
 (defn frame [] (doto 
                  (new JFrame)

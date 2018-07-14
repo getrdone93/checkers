@@ -85,12 +85,16 @@
     (when (= team human-team)
       res)))
 
+(defn clicked-square [mouse-event find-func read-board]
+  (first (filter #(and (some? %) 
+                       (= (((second %) :square) :color) (. Color black)))
+                          (map-indexed #(find-func %1 %2 :square :square-obj mouse-event) read-board))))
+
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
             (let [read-board (get-board)
                   hl-c (hl-checker read-board)
-                  clicked-square (first (filter #(and (some? %) (= (((second %) :square) :color) (. Color black)))
-                                                           (map-indexed #(find-clicked %1 %2 :square :square-obj mouse-event) read-board)))
+                  clicked-square (clicked-square mouse-event find-clicked read-board)
                   clicked-checker (first (filter some? (map-indexed #(find-clicked %1 %2 :checker :checker-obj mouse-event) read-board)))
                   update-clicked (fn [ele val] (when (some? ele)
                                                  (reset! board (assoc @board (first ele) 

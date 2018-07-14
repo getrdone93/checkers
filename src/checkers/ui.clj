@@ -67,12 +67,17 @@
                                      (/ (* scale dim) 5) 
                                      (/ (* scale dim) 5)))))
 
+(defn hl-element [ele-key read-board]
+  (set (filter some? (map-indexed 
+                       (fn [index {ele ele-key {clicked :clicked} ele-key :as entry}] 
+                         (when (and (some? ele) clicked)
+                           [index entry])) read-board))))
 
 (defn hl-checker [read-board] 
-  (first (filter some? (map-indexed (fn [index {ele :checker
-                                                {clicked :clicked} :checker :as entry}] 
-                                      (when (and (some? ele) clicked)
-                                        [index entry])) read-board))))
+  (first (hl-element :checker read-board)))
+
+(defn hl-squares [read-board]
+  (hl-element :square read-board))
 
 (defn find-clicked [index ele key shapeKey mouse-event]
   (when (and (some? (ele key)) (some? ((ele key) shapeKey)) 
@@ -80,6 +85,7 @@
                                         (. mouse-event (getX)) 
                                         (. mouse-event (getY)))))
                                               [index ele]))
+
 (defn find-clicked-chk [index ele key shapeKey mouse-event]
   (let [[index {{[team _] :team} :checker} :as res] (find-clicked index ele key shapeKey mouse-event)]
     (when (= team human-team)
@@ -98,7 +104,7 @@
   (let [{sp :simple-paths ajp :all-jump-paths} (paths checker read-board)]
     (or (some? (first (filter #(= square %) sp))) 
         (some? (first (set (map (fn [{p :path}]
-                                (first (filter #(= 5 %) p))) ajp)))))))
+                                (first (filter #(= square %) p))) ajp)))))))
 
 (defn update-clicked [ele uk val]
   (when (some? ele)
@@ -123,10 +129,10 @@
                  (and (nil? hl-c) (some? clicked-checker)) (flip-clicked clicked-checker :checker)
                  (and (some? hl-c) (some? clicked-checker)) (do
                                                               (flip-clicked hl-c :checker)
-                                                              (flip-clicked clicked-checker :checker))
+                                                              (flip-clicked clicked-checker :checker)
+                                                              (map #(flip-clicked % :square) (hl-squares read-board)))
                  (and (some? hl-c) (some? clicked-square)) (when (valid-square? hl-c clicked-square read-board) 
                                                              (flip-clicked clicked-square :square)))
-               
                (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))
              ))))
 

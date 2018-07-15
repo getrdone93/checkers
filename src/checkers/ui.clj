@@ -130,28 +130,24 @@
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
-            (let [v (println "ml called")
-                  read-board (get-board)
+            (let [read-board (get-board)
                   hl-c (hl-checker read-board)
                   clicked-square (clicked-square mouse-event find-clicked read-board)
                   clicked-checker (clicked-checker mouse-event find-clicked read-board)]
 
-               (cond 
-                 (and (nil? hl-c) (some? clicked-checker)) (do 
-                                                             (reset! board (flip-clicked clicked-checker :checker read-board))
-                                                             (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))
-                 (and (some? hl-c) 
-                      (some? clicked-checker)) (do 
-                                                 (reset! board 
-                                                         (let [new-board (flip-clicked clicked-checker :checker 
-                                                                           (flip-clicked hl-c :checker read-board))] 
-                                                           (unclick-squares (vec (hl-squares new-board)) new-board)))
-                                                 (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))
+               (do 
+                 (cond 
+                   (and (nil? hl-c) (some? clicked-checker)) (reset! board (flip-clicked clicked-checker :checker read-board))
+                   (and (some? hl-c) 
+                        (some? clicked-checker)) (reset! board (let [new-board (flip-clicked clicked-checker :checker 
+                                                                                 (flip-clicked hl-c :checker read-board))] 
+                                                                                                 (unclick-squares (vec (hl-squares new-board)) new-board)))
+                                                   
                                                               
-                 (and (some? hl-c) (some? clicked-square)) (when (valid-square? hl-c clicked-square read-board) 
-                                                               (reset! board 
-                                                                       (flip-clicked clicked-square :square read-board))
-                                                               (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))))))))
+                   (and (some? hl-c) (some? clicked-square)) (when (valid-square? hl-c clicked-square read-board) 
+                                                                 (reset! board 
+                                                                         (flip-clicked clicked-square :square read-board))))
+                 (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))))))
 
 ;(def ml (proxy [MouseAdapter] []
 ;          (mouseClicked [mouse-event] 

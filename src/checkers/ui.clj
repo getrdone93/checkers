@@ -100,8 +100,8 @@
 (defn valid-square? [checker square read-board]
   (let [{sp :simple-paths ajp :all-jump-paths} (paths checker read-board)]
     (or (some? (first (filter #(= square %) sp))) 
-        (some? (first (set (map (fn [{p :path}]
-                                (first (filter #(= square %) p))) ajp)))))))
+        (some? (first (filter some? (set (map (fn [{p :path}]
+                                              (first (filter #(= square %) p))) ajp))))))))
 
 (defn flip-clicked [[ind {{val :clicked} uk :as entry}] uk new-board]
   (when (some? entry) 
@@ -139,9 +139,11 @@
                  (cond 
                    (and (nil? hl-c) (some? clicked-checker)) (reset! board (flip-clicked clicked-checker :checker read-board))
                    (and (some? hl-c) 
-                        (some? clicked-checker)) (reset! board (let [new-board (flip-clicked clicked-checker :checker 
-                                                                                 (flip-clicked hl-c :checker read-board))] 
-                                                                                                 (unclick-squares (vec (hl-squares new-board)) new-board)))
+                        (some? clicked-checker)) (reset! board 
+                                                         (let [new-board (flip-clicked clicked-checker :checker 
+                                                                           (flip-clicked hl-c :checker read-board))] 
+                                                                                           (unclick-squares 
+                                                                                             (vec (hl-squares new-board)) new-board)))
                                                    
                                                               
                    (and (some? hl-c) (some? clicked-square)) (when (valid-square? hl-c clicked-square read-board) 

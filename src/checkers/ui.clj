@@ -106,17 +106,16 @@
         (some? (first (set (map (fn [{p :path}]
                                 (first (filter #(= square %) p))) ajp)))))))
 
-(defn update-clicked [ele uk val]
-  (when (some? ele)
-    (reset! board (assoc @board (first ele) 
-                         (assoc (second ele) uk 
-                                (assoc ((second ele) uk) :clicked val))))))
-
-(defn flip-clicked [[ind {{val :clicked} uk :as entry}] uk]
+(defn flip-clicked [[ind {{val :clicked} uk :as entry}] uk new-board]
   (when (some? entry) 
-      (reset! board (assoc @board ind 
-                           (assoc entry uk 
-                                  (assoc (entry uk) :clicked (not val)))))))
+    (assoc new-board ind 
+      (assoc entry uk 
+             (assoc (entry uk) :clicked (not val))))))
+
+(defn unclick-squares [[fs :as sqs] new-board]
+  (if (some? fs)
+    (unclick-squares (rest sqs) (flip-clicked fs :square new-board))
+    new-board))
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
@@ -126,13 +125,16 @@
                   clicked-checker (clicked-checker mouse-event find-clicked read-board)]
              (do 
                (cond 
-                 (and (nil? hl-c) (some? clicked-checker)) (flip-clicked clicked-checker :checker)
-                 (and (some? hl-c) (some? clicked-checker)) (do
-                                                              (flip-clicked hl-c :checker)
-                                                              (flip-clicked clicked-checker :checker)
-                                                              (map #(flip-clicked % :square) (hl-squares read-board)))
+                 (and (nil? hl-c) (some? clicked-checker)) (reset! board (flip-clicked clicked-checker :checker read-board))
+                 (and (some? hl-c) 
+                      (some? clicked-checker)) (reset! board 
+                                                       (let [new-board (flip-clicked clicked-checker :checker 
+                                                                         (flip-clicked hl-c :checker read-board))] 
+                                                         (unclick-squares (vec (hl-squares new-board)) new-board)))
+                                                              
                  (and (some? hl-c) (some? clicked-square)) (when (valid-square? hl-c clicked-square read-board) 
-                                                             (flip-clicked clicked-square :square)))
+                                                             (reset! board 
+                                                                     (flip-clicked clicked-square :square read-board))))
                (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))
              ))))
 

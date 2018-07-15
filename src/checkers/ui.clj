@@ -36,9 +36,6 @@
                    (.fillOval im-graph (king-shift chkx) (king-shift chky) king-dim king-dim)))
              (draw-board im-graph (rest eles))))
 
-(defn button-click [action-event]
-  (println "clicked!"))
-
 (def submit-button
   (let [sb (new JButton "SUBMIT MOVE")
         _ (. sb (setVerticalTextPosition (AbstractButton/CENTER)))
@@ -93,7 +90,7 @@
 
 (defn clicked-square [mouse-event find-func read-board]
   (first (filter #(and (some? %) 
-                       (= (((second %) :square) :color) (. Color black)))
+                       (= (((second %) :square) :color) black))
                           (map-indexed #(find-func %1 %2 :square :square-obj mouse-event) read-board))))
 
 (defn clicked-checker [mouse-event find-func read-board]
@@ -117,26 +114,44 @@
     (unclick-squares (rest sqs) (flip-clicked fs :square new-board))
     new-board))
 
+;(defn build-path [[sci sc :as chk] hlsqs ajp]
+;  ())
+
+(defn button-click [action-event]
+  (let [read-board (get-board)
+        hlsqs (hl-squares read-board)
+        hlc (hl-checker read-board)
+        {sps :simple-paths ajp :all-jump-paths} (paths hlc read-board)]
+    (if (= 1 (count (intersection sps hlsqs)))
+      (let [{mb :read-board ne :new-entry} (move-checker {:from hlc :to (first hlsqs)} read-board)]
+        (reset! board (unclick-squares [ne] mb))
+        (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))
+      )))
+
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
-            (let [read-board (get-board)
+            (let [v (println "ml called")
+                  read-board (get-board)
                   hl-c (hl-checker read-board)
                   clicked-square (clicked-square mouse-event find-clicked read-board)
                   clicked-checker (clicked-checker mouse-event find-clicked read-board)]
-             (do 
+
                (cond 
-                 (and (nil? hl-c) (some? clicked-checker)) (reset! board (flip-clicked clicked-checker :checker read-board))
+                 (and (nil? hl-c) (some? clicked-checker)) (do 
+                                                             (reset! board (flip-clicked clicked-checker :checker read-board))
+                                                             (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))
                  (and (some? hl-c) 
-                      (some? clicked-checker)) (reset! board 
-                                                       (let [new-board (flip-clicked clicked-checker :checker 
-                                                                         (flip-clicked hl-c :checker read-board))] 
-                                                         (unclick-squares (vec (hl-squares new-board)) new-board)))
+                      (some? clicked-checker)) (do 
+                                                 (reset! board 
+                                                         (let [new-board (flip-clicked clicked-checker :checker 
+                                                                           (flip-clicked hl-c :checker read-board))] 
+                                                           (unclick-squares (vec (hl-squares new-board)) new-board)))
+                                                 (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))
                                                               
                  (and (some? hl-c) (some? clicked-square)) (when (valid-square? hl-c clicked-square read-board) 
-                                                             (reset! board 
-                                                                     (flip-clicked clicked-square :square read-board))))
-               (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))
-             ))))
+                                                               (reset! board 
+                                                                       (flip-clicked clicked-square :square read-board))
+                                                               (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))))))))
 
 ;(def ml (proxy [MouseAdapter] []
 ;          (mouseClicked [mouse-event] 

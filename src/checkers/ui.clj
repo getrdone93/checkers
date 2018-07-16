@@ -117,16 +117,26 @@
 ;(defn build-path [[sci sc :as chk] hlsqs ajp]
 ;  ())
 
+(defn simple-move? [hlsqs hlc sps]
+  (= 1 (count (intersection sps hlsqs))))
+
+(defn exec-simple-move! [hlc hlsqs read-board]
+  (let [{mb :read-board ne :new-entry} (move-checker {:from hlc :to (first hlsqs)} read-board)]
+        (reset! board (unclick-squares [ne] mb))
+        (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))))
+
+(defn jump-move? [hlsqs [{ns :next} :as ajp]]
+  (= 1 (count (intersection (set (map (fn [{p :path}]
+                                        (last p)) (map ajp ns))) hlsqs))))
+
 (defn button-click [action-event]
   (let [read-board (get-board)
         hlsqs (hl-squares read-board)
         hlc (hl-checker read-board)
-        {sps :simple-paths ajp :all-jump-paths} (paths hlc read-board)]
-    (if (= 1 (count (intersection sps hlsqs)))
-      (let [{mb :read-board ne :new-entry} (move-checker {:from hlc :to (first hlsqs)} read-board)]
-        (reset! board (unclick-squares [ne] mb))
-        (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))
-      )))
+        {sps :simple-paths ajp :all-jump-paths} (paths hlc read-board)
+        sm (simple-move? hlsqs hlc sps)]
+    (if sm
+      (exec-simple-move! hlc hlsqs read-board))))
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 

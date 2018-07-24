@@ -145,7 +145,7 @@
 
 (defn broken-path? [[fe :as tf-path]]
     (and (> (count tf-path) 1) 
-         (or (and (true? fe) (true? (last tf-path)) 
+         (or (and (true? fe) (true? (last tf-path)) (> (count tf-path) 2) 
                      (false? (reduce #(and %1 %2) (drop-last (rest tf-path)))))
                 (and (false? fe) (true? (last tf-path))))))
 

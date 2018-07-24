@@ -133,11 +133,13 @@
   ((fn traverse [next-set jp cp]
      (if (some? (first next-set))
        (let [{ep :path entry-ns :next :as entry} (jp (first next-set))
-             np (conj cp ((last ep) :clicked))]
+             [_ {{sqclk :clicked} :square}] (last ep)
+             np (conj cp sqclk)]
          (if (broken-path? np)
            {:broken-path true :path np} 
            (let [{bp :broken-path :as ret} (traverse entry-ns jp np)]
-             (when (false? bp)
+             (if bp
+               ret
                (traverse (rest next-set) jp cp)))))
        {:broken-path false :path cp})) ns ajp []))
 

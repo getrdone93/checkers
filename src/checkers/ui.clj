@@ -117,8 +117,14 @@
 ;(defn build-path [[sci sc :as chk] hlsqs ajp]
 ;  ())
 
-(defn simple-move? [hlsqs hlc sps]
+(defn simple-move? [hlsqs sps]
   (= 1 (count (intersection sps hlsqs))))
+
+(defn jump-move? [hlsqs ajp]
+  (and (some? ajp) 
+       (> (count (intersection hlsqs 
+                               (reduce #(union %1 %2) (map (fn [{p :path}]
+                                                                   (set p)) ajp)))) 0)))
 
 (defn exec-simple-move! [hlc hlsqs read-board]
   (let [{mb :read-board ne :new-entry} (move-checker {:from hlc :to (first hlsqs)} read-board)]
@@ -129,7 +135,7 @@
   (= 1 (count (intersection (set (map (fn [{p :path}]
                                         (last p)) (map ajp ns))) hlsqs))))
 
-(defn traverse-ajp [hlsqs [{ns :next p :path} :as ajp]]
+(defn traverse-ajp [[{ns :next p :path} :as ajp]]
   ((fn traverse [next-set jp cp]
      (if (some? (first next-set))
        (let [{ep :path entry-ns :next :as entry} (jp (first next-set))
@@ -154,10 +160,13 @@
         hlsqs (hl-squares read-board)
         hlc (hl-checker read-board)
         {sps :simple-paths ajp :all-jump-paths} (paths hlc read-board)
-        sm (simple-move? hlsqs hlc sps)
-        jm ]
-    (if sm
-      (exec-simple-move! hlc hlsqs read-board))))
+        sm (simple-move? hlsqs sps)
+        jm (jump-move? hlsqs ajp)]
+    (cond 
+      (and sm jm) nil ;not a valid move, so do nothing
+      sm (exec-simple-move! hlc hlsqs read-board)
+      jm (println "you want to jump")
+      :else nil)))
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
@@ -181,32 +190,6 @@
                                                                  (reset! board 
                                                                          (flip-clicked clicked-square :square read-board))))
                  (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))))))
-
-;(def ml (proxy [MouseAdapter] []
-;          (mouseClicked [mouse-event] 
-;            (let [read-board (get-board)
-;                  hl-c (hl-checker read-board)
-;                  clicked-square (clicked-square mouse-event find-clicked read-board)
-;                  clicked-checker (clicked-checker mouse-event find-clicked read-board)
-;                  update-clicked (fn [ele val] (when (some? ele)
-;                                                 (reset! board (assoc @board (first ele) 
-;                                                                      (assoc (second ele) :checker 
-;                                                                             (assoc ((second ele) :checker) :clicked val))))))
-;                  {move? :valid-move :as move-data} (valid-move? {:from hl-c
-;                                                                      :to clicked-square} read-board)]
-;             (if move?
-;               (do 
-;                 (let [ub (exec-move-checker move-data board {:from hl-c :to clicked-square} read-board)]
-;                   (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))
-;                   (Thread/sleep think-time-ms)
-;	                 (let [rand-move (rand-chk-move ub)]
-;	                   (exec-move-checker (valid-move? rand-move ub) board rand-move ub))
-;                   (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))
-;                   ))
-;               (do
-;                   (update-clicked hl-c false)
-;                   (update-clicked clicked-checker true)
-;                   (. panel (repaint))))))))
 
 (defn frame [] (doto 
                  (new JFrame)

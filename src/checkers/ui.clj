@@ -125,16 +125,34 @@
         (reset! board (unclick-squares [ne] mb))
         (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))))
 
-(defn jump-move? [hlsqs [{ns :next} :as ajp]]
+(defn one-initial-jump? [hlsqs [{ns :next} :as ajp]]
   (= 1 (count (intersection (set (map (fn [{p :path}]
                                         (last p)) (map ajp ns))) hlsqs))))
+
+(defn traverse-ajp [hlsqs [{ns :next p :path} :as ajp]]
+  )
+
+(defn broken-path? [hlsqs [{ns :next p :path} :as ajp]]
+  )
+
+(defn run-length-encoding [things]
+  (rle things nil []))
+
+(defn rle [[ft :as things] [ct thing :as entry] res]
+  (if (some? ft)
+    (cond 
+      (= thing ft) (rle (rest things) [(inc ct) thing] res)
+      (nil? entry) (rle (rest things) [1 ft] res)
+      :else (rle (rest things) [1 ft] (conj res entry)))
+    (conj res entry)))
 
 (defn button-click [action-event]
   (let [read-board (get-board)
         hlsqs (hl-squares read-board)
         hlc (hl-checker read-board)
         {sps :simple-paths ajp :all-jump-paths} (paths hlc read-board)
-        sm (simple-move? hlsqs hlc sps)]
+        sm (simple-move? hlsqs hlc sps)
+        jm ]
     (if sm
       (exec-simple-move! hlc hlsqs read-board))))
 

@@ -132,19 +132,10 @@
 (defn traverse-ajp [hlsqs [{ns :next p :path} :as ajp]]
   )
 
-(defn broken-path? [hlsqs [{ns :next p :path} :as ajp]]
-  )
-
-(defn run-length-encoding [things]
-  (rle things nil []))
-
-(defn rle [[ft :as things] [ct thing :as entry] res]
-  (if (some? ft)
-    (cond 
-      (= thing ft) (rle (rest things) [(inc ct) thing] res)
-      (nil? entry) (rle (rest things) [1 ft] res)
-      :else (rle (rest things) [1 ft] (conj res entry)))
-    (conj res entry)))
+(defn broken-path? [[fe :as tf-path]]
+    (or (and (true? fe) (true? (last tf-path)) 
+             (false? (reduce #(and %1 %2) (drop-last (rest tf-path)))))
+        (and (false? fe) (true? (last tf-path)))))
 
 (defn button-click [action-event]
   (let [read-board (get-board)

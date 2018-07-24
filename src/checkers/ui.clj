@@ -130,12 +130,22 @@
                                         (last p)) (map ajp ns))) hlsqs))))
 
 (defn traverse-ajp [hlsqs [{ns :next p :path} :as ajp]]
-  )
+  ((fn traverse [next-set jp cp]
+     (if (some? (first next-set))
+       (let [{ep :path entry-ns :next :as entry} (jp (first next-set))
+             np (conj cp ((last ep) :clicked))]
+         (if (broken-path? np)
+           {:broken-path true :path np} 
+           (let [{bp :broken-path :as ret} (traverse entry-ns jp np)]
+             (when (false? bp)
+               (traverse (rest next-set) jp cp)))))
+       {:broken-path false :path cp})) ns ajp []))
 
 (defn broken-path? [[fe :as tf-path]]
-    (or (and (true? fe) (true? (last tf-path)) 
-             (false? (reduce #(and %1 %2) (drop-last (rest tf-path)))))
-        (and (false? fe) (true? (last tf-path)))))
+    (and (> (count tf-path) 1) 
+         (or (and (true? fe) (true? (last tf-path)) 
+                     (false? (reduce #(and %1 %2) (drop-last (rest tf-path)))))
+                (and (false? fe) (true? (last tf-path))))))
 
 (defn button-click [action-event]
   (let [read-board (get-board)

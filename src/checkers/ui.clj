@@ -131,6 +131,17 @@
         (reset! board (unclick-squares [ne] mb))
         (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))))
 
+(def mjs 300)
+
+(defn abs [n] (max n (- n)))
+
+(defn exec-jump-move! [hlc hlsqs [{ns :next} :as ajp] read-board]
+  )
+
+(defn sort-hl-squares [[_ {{[_ cy] :point} :square} :as hlc] hlsqs]
+  (apply sorted-set (map (fn [[_ {{[_ y] :point} :square} :as entry]]
+                           [(abs (- cy y)) entry]) hlsqs)))
+
 (defn one-initial-jump? [hlsqs [{ns :next} :as ajp]]
   (= 1 (count (intersection (set (map (fn [{p :path}]
                                         (last p)) (map ajp ns))) hlsqs))))

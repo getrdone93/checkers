@@ -15,6 +15,7 @@
 (def king-dim (/ circ-dim 2.4))
 (def board (atom (gen-board 0 [])))
 (def human-team :team2)
+(def mjs 1500)
 
 (defn get-board [] @board)
 (defn hl-shift [cp] (- cp 4))
@@ -114,9 +115,6 @@
     (unclick-squares (rest sqs) (flip-clicked fs :square new-board))
     new-board))
 
-;(defn build-path [[sci sc :as chk] hlsqs ajp]
-;  ())
-
 (defn simple-move? [hlsqs sps]
   (= 1 (count (intersection sps hlsqs))))
 
@@ -131,8 +129,6 @@
         (reset! board (unclick-squares [ne] mb))
         (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))))
 
-(def mjs 1000)
-
 (defn exec-jump-move! [hlc ajp]
     (let [move-path (filter (fn [{p :path :as entry}]
                                       (when (reduce #(or %1 %2) 
@@ -141,12 +137,13 @@
                                         entry)) ajp)]
       ((fn traverse [[{p :path} :as mp] c rb]
          (when (some? p)
-           (let [{nb :read-board ne :new-entry} (move-checker {:from c :to (last p)} 
-                                                              (remove-checker (first p) rb))]
-             (reset! board (unclick-squares [ne] nb))
+           (let [{mb :read-board [nei ne] :new-entry} (move-checker {:from c :to (last p)} 
+                                                              (remove-checker (first p) rb))
+                 nb (unclick-squares [[nei ne]] mb)]
+             (reset! board nb)
              (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))
              (Thread/sleep mjs)
-             (traverse (rest mp) ne @board)))) move-path hlc @board)))
+             (traverse (rest mp) [nei (nb nei)] nb)))) move-path hlc @board)))
 
 (defn sort-hl-squares [[_ {{[_ cy] :point} :square} :as hlc] hlsqs]
   (apply sorted-set (map (fn [[_ {{[_ y] :point} :square} :as entry]]

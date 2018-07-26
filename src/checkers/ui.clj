@@ -131,12 +131,22 @@
         (reset! board (unclick-squares [ne] mb))
         (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))))
 
-(def mjs 300)
+(def mjs 1000)
 
-(defn abs [n] (max n (- n)))
-
-(defn exec-jump-move! [hlc hlsqs [{ns :next} :as ajp] read-board]
-  )
+(defn exec-jump-move! [hlc ajp]
+    (let [move-path (filter (fn [{p :path :as entry}]
+                                      (when (reduce #(or %1 %2) 
+                                                    (map (fn [[_ {{sqclk :clicked} :square}]]
+                                                       sqclk) p))
+                                        entry)) ajp)]
+      ((fn traverse [[{p :path} :as mp] c rb]
+         (when (some? p)
+           (let [{nb :read-board ne :new-entry} (move-checker {:from c :to (last p)} 
+                                                              (remove-checker (first p) rb))]
+             (reset! board (unclick-squares [ne] nb))
+             (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))
+             (Thread/sleep mjs)
+             (traverse (rest mp) ne @board)))) move-path hlc @board)))
 
 (defn sort-hl-squares [[_ {{[_ cy] :point} :square} :as hlc] hlsqs]
   (apply sorted-set (map (fn [[_ {{[_ y] :point} :square} :as entry]]
@@ -176,7 +186,7 @@
     (cond 
       (and sm jm) nil ;not a valid move, so do nothing
       sm (exec-simple-move! hlc hlsqs read-board)
-      jm (println "you want to jump")
+      jm (exec-jump-move! hlc ajp)
       :else nil)))
 
 (def ml (proxy [MouseAdapter] []

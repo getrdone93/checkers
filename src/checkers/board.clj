@@ -229,8 +229,6 @@
 	     :ajp-move-index valid-jump})
 	  false))
 
-;(paths (hl-checker @board) @board)
-
 (defn remove-jumped-chks [{jp :all-jump-paths
                            move-key :ajp-move-index :as move-data} read-board]
   (if (some? move-key)

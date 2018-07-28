@@ -15,7 +15,7 @@
 (def king-dim (/ circ-dim 2.4))
 (def board (atom (gen-board 0 [])))
 (def human-team :team2)
-(def mjs 1500)
+(def mjs 1100)
 
 (defn get-board [] @board)
 (defn hl-shift [cp] (- cp 4))
@@ -153,7 +153,12 @@
   (= 1 (count (intersection (set (map (fn [{p :path}]
                                         (last p)) (map ajp ns))) hlsqs))))
 
-(defn traverse-ajp [[{ns :next p :path} :as ajp]]
+(defn get-clicked [ajp indicies]
+  (set (filter some? (map (fn [{p :path :as entry}]
+                            (when (((second (last p)) :square) :clicked)
+                              entry)) (map ajp indicies)))))
+
+(defn find-broken-path [[{ns :next p :path} :as ajp]]
   ((fn traverse [next-set jp cp]
      (if (some? (first next-set))
        (let [{ep :path entry-ns :next :as entry} (jp (first next-set))
@@ -183,7 +188,9 @@
     (cond 
       (and sm jm) nil ;not a valid move, so do nothing
       sm (exec-simple-move! hlc hlsqs read-board)
-      jm (exec-jump-move! hlc ajp)
+      jm (when (and (false? ((find-broken-path ajp) :broken-path))
+                    (one-initial-jump? hlsqs ajp)) 
+           (exec-jump-move! hlc ajp))
       :else nil)))
 
 (def ml (proxy [MouseAdapter] []

@@ -186,7 +186,7 @@
 					                 n-ajp (assoc temp-ajp 0 nfe)
 					                 {nrb :read-board ne :new-entry} (move-checker {:from checker :to (last (first jumps))} 
 					                                                               (remove-checker (first (first jumps)) crb))
-					                 {ajp-res :ajp nrb :read-board hi :hi} (ajp-new ne {:ajp n-ajp :read-board nrb :hi ni :bi ni} 
+					                 {ajp-res :ajp nrb :read-board hi :hi} (ajp ne {:ajp n-ajp :read-board nrb :hi ni :bi ni} 
 					                                                            (jump-paths-new ne nrb))]
 					             (base-move (rest jumps) {:ajp ajp-res
 					                                      :read-board read-board

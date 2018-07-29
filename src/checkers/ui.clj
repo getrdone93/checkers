@@ -146,10 +146,6 @@
              (Thread/sleep mjs)
              (traverse (rest mp) [nei (nb nei)] nb)))) move-path hlc @board)))
 
-(defn one-initial-jump? [hlsqs [{ns :next} :as ajp]]
-  (= 1 (count (intersection (set (map (fn [{p :path}]
-                                        (last p)) (map ajp ns))) hlsqs))))
-
 (defn get-clicked [ajp indicies]
   (set (filter some? (map (fn [{p :path :as entry}]
                             (when (((second (last p)) :square) :clicked)

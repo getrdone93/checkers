@@ -126,8 +126,9 @@
                                                                    (set p)) ajp)))) 0)))
 
 (defn exec-simple-move! [hlc hlsqs read-board]
-  (let [{mb :read-board ne :new-entry} (move-checker {:from hlc :to (first hlsqs)} read-board)]
-        (reset! board (unclick-squares [ne] mb))
+  (let [{mb :read-board ne :new-entry} (move-checker {:from hlc :to (first hlsqs)} read-board)
+        {kb :board ke :entry} (king-me ne mb)]
+        (reset! board (unclick-squares [ke] kb))
         (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))))
 
 (defn exec-jump-move! [hlc ajp]
@@ -138,13 +139,14 @@
                                         entry)) ajp)]
       ((fn traverse [[{p :path} :as mp] c rb]
          (when (some? p)
-           (let [{mb :read-board [nei ne] :new-entry} (move-checker {:from c :to (last p)} 
-                                                              (remove-checker (first p) rb))
-                 nb (unclick-squares [[nei ne]] mb)]
+           (let [{mb :read-board ne :new-entry} (move-checker {:from c :to (last p)} 
+                                                        (remove-checker (first p) rb))
+                 {kb :board [kei ke] :entry} (king-me ne mb) 
+                 nb (unclick-squares [[kei ke]] kb)]
              (reset! board nb)
              (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))
              (Thread/sleep mjs)
-             (traverse (rest mp) [nei (nb nei)] nb)))) move-path hlc @board)))
+             (traverse (rest mp) [kei (nb kei)] nb)))) move-path hlc @board)))
 
 (defn get-clicked [ajp indicies]
   (set (filter some? (map (fn [{p :path :as entry}]

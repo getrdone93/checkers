@@ -1,7 +1,8 @@
 ;As with all journeys, it begins with a simple willingness, with an abiding faith in the unknown.
 (ns checkers.ui
   (:refer checkers.board)
-  (:refer checkers.random-player))
+  (:refer checkers.random-player)
+  (:refer clojure.set))
 
 (import 
  '(java.awt Color Graphics Dimension BorderLayout Shape)
@@ -145,10 +146,6 @@
              (Thread/sleep mjs)
              (traverse (rest mp) [nei (nb nei)] nb)))) move-path hlc @board)))
 
-(defn sort-hl-squares [[_ {{[_ cy] :point} :square} :as hlc] hlsqs]
-  (apply sorted-set (map (fn [[_ {{[_ y] :point} :square} :as entry]]
-                           [(abs (- cy y)) entry]) hlsqs)))
-
 (defn one-initial-jump? [hlsqs [{ns :next} :as ajp]]
   (= 1 (count (intersection (set (map (fn [{p :path}]
                                         (last p)) (map ajp ns))) hlsqs))))
@@ -157,6 +154,12 @@
   (set (filter some? (map (fn [{p :path :as entry}]
                             (when (((second (last p)) :square) :clicked)
                               entry)) (map ajp indicies)))))
+
+(defn broken-path? [[fe :as tf-path]]
+    (and (> (count tf-path) 1) 
+         (or (and (true? fe) (true? (last tf-path)) (> (count tf-path) 2) 
+                     (false? (reduce #(and %1 %2) (drop-last (rest tf-path)))))
+                (and (false? fe) (true? (last tf-path))))))
 
 (defn find-broken-path [[{ns :next p :path} :as ajp]]
   ((fn traverse [next-set jp cp]
@@ -171,12 +174,6 @@
                ret
                (traverse (rest next-set) jp cp)))))
        {:broken-path false :path cp})) ns ajp []))
-
-(defn broken-path? [[fe :as tf-path]]
-    (and (> (count tf-path) 1) 
-         (or (and (true? fe) (true? (last tf-path)) (> (count tf-path) 2) 
-                     (false? (reduce #(and %1 %2) (drop-last (rest tf-path)))))
-                (and (false? fe) (true? (last tf-path))))))
 
 (defn button-click [action-event]
   (let [read-board (get-board)

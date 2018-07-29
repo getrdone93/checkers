@@ -161,20 +161,19 @@
                           :as square} :as entry] {curr-ajp :ajp
                                                   crb :read-board
                                                   c-ajp-i :hi
+                                                  base-ind :bi
                                                   :as res} jumps]
   (if (some? (first jumps))
     (let [ni (inc c-ajp-i)
-          nce (assoc (curr-ajp c-ajp-i) :next (conj ((curr-ajp c-ajp-i) :next) ni))
+          nce (assoc (curr-ajp base-ind) :next (conj ((curr-ajp base-ind) :next) ni))
           new-ajp (assoc (conj curr-ajp {:path (first jumps) :next #{}})
-                         c-ajp-i nce)
+                         base-ind nce)
           {nrb :read-board
            ne :new-entry} (move-checker {:from entry :to (last (first jumps))} 
                                         (remove-checker (first (first jumps)) crb))]
-      (ajp ne {:ajp new-ajp :hi ni :read-board nrb} (rest jumps)))
-    (let [jpn (jump-paths-new entry crb)]
-      (if (empty? jpn)
-        res
-        (ajp entry res jpn)))))
+      (let [{n-ajp :ajp new-hi :hi} (ajp ne {:ajp new-ajp :bi ni :hi ni :read-board nrb} (jump-paths-new ne nrb))]
+        (ajp entry {:ajp n-ajp :bi base-ind :hi new-hi :read-board crb} (rest jumps))))
+    res))
 
 (defn all-jump-paths [checker read-board]
   (let [jps (jump-paths-new checker read-board)
@@ -187,7 +186,7 @@
 					                 n-ajp (assoc temp-ajp 0 nfe)
 					                 {nrb :read-board ne :new-entry} (move-checker {:from checker :to (last (first jumps))} 
 					                                                               (remove-checker (first (first jumps)) crb))
-					                 {ajp-res :ajp nrb :read-board hi :hi} (ajp ne {:ajp n-ajp :read-board nrb :hi ni} 
+					                 {ajp-res :ajp nrb :read-board hi :hi} (ajp-new ne {:ajp n-ajp :read-board nrb :hi ni :bi ni} 
 					                                                            (jump-paths-new ne nrb))]
 					             (base-move (rest jumps) {:ajp ajp-res
 					                                      :read-board read-board

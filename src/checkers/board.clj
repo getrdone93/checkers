@@ -130,7 +130,7 @@
                           (let [js (jump-squares ind mf read-board)]
                             (jump entry (first js) (second js)))) funcs))))
 
-(defn jump-paths-new [[ind {chk :checker 
+(defn jump-paths [[ind {chk :checker 
                            {[team _] :team
                             king :king} :checker} :as entry] read-board]
   (let [norm-moves (gen-jump-moves entry (move-func team) read-board)]
@@ -172,12 +172,12 @@
           {nrb :read-board
            ne :new-entry} (move-checker {:from entry :to (last (first jumps))} 
                                         (remove-checker (first (first jumps)) crb))]
-      (let [{n-ajp :ajp new-hi :hi} (ajp ne {:ajp new-ajp :bi ni :hi ni :read-board nrb} (jump-paths-new ne nrb))]
+      (let [{n-ajp :ajp new-hi :hi} (ajp ne {:ajp new-ajp :bi ni :hi ni :read-board nrb} (jump-paths ne nrb))]
         (ajp entry {:ajp n-ajp :bi base-ind :hi new-hi :read-board crb} (rest jumps))))
     res))
 
 (defn all-jump-paths [checker read-board]
-  (let [jps (jump-paths-new checker read-board)
+  (let [jps (jump-paths checker read-board)
         fe {:path [checker] :next #{}}
         ajp-val ((fn base-move [jumps {c-ajp :ajp crb :read-board chi :hi :as res}]
 					         (if (some? (first jumps))
@@ -188,7 +188,7 @@
 					                 {nrb :read-board ne :new-entry} (move-checker {:from checker :to (last (first jumps))} 
 					                                                               (remove-checker (first (first jumps)) crb))
 					                 {ajp-res :ajp nrb :read-board hi :hi} (ajp ne {:ajp n-ajp :read-board nrb :hi ni :bi ni} 
-					                                                            (jump-paths-new ne nrb))]
+					                                                            (jump-paths ne nrb))]
 					             (base-move (rest jumps) {:ajp ajp-res
 					                                      :read-board read-board
 					                                      :hi hi}))
@@ -229,13 +229,6 @@
 	     :ajp-move-index valid-jump})
 	  false))
 
-(defn remove-jumped-chks [{jp :all-jump-paths
-                           move-key :ajp-move-index :as move-data} read-board]
-  (if (some? move-key)
-	    (let [[jci jc] (first ((jp move-key) :path))]
-       (assoc read-board jci (assoc jc :checker nil)))
-	    read-board))
-
 (defn checkers [team read-board] 
   (set (filter some? (map #((fn [{{[chk-t _] :team} :checker :as entry} tm] 
                                                      (when (= chk-t tm)
@@ -254,8 +247,3 @@
     (or (zero? (count (checkers :team2 read-board)))
         (zero? (count (movable-checkers :team2 read-board)))) :team1
     :else nil))
-
-(defn exec-move-checker [move-data board-atom from-to read-board] 
-  (reset! board-atom (let [{board :read-board moved-entry :new-entry} 
-                           (move-checker from-to (remove-jumped-chks move-data read-board))]
-                                          (king-me moved-entry board))))

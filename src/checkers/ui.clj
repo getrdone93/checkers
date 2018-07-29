@@ -16,7 +16,7 @@
 (def king-dim (/ circ-dim 2.4))
 (def board (atom (gen-board 0 [])))
 (def human-team :team2)
-(def mjs 1100)
+(def mjs 900)
 
 (defn get-board [] @board)
 (defn hl-shift [cp] (- cp 4))
@@ -155,6 +155,22 @@
                             (when (((second (last p)) :square) :clicked)
                               entry)) (map ajp indicies)))))
 
+(defn clicks-per-level [ajp ns levels]
+  (if (empty? ns)
+    levels
+    (let [eles (vec (get-clicked ajp ns))]
+      (if (empty? eles)
+        levels
+        (clicks-per-level ajp (reduce (fn [x y]
+                                  (union x y)) (map :next eles)) 
+                    (conj levels (= (count eles) 1)))))))
+
+(defn single-path? [[{ns :next} :as ajp]]
+  (let [levels (clicks-per-level ajp ns [])]
+    (if (empty? levels)
+      false
+      (reduce #(and %1 %2) levels))))
+
 (defn broken-path? [[fe :as tf-path]]
     (and (> (count tf-path) 1) 
          (or (and (true? fe) (true? (last tf-path)) (> (count tf-path) 2) 
@@ -186,7 +202,7 @@
       (and sm jm) nil ;not a valid move, so do nothing
       sm (exec-simple-move! hlc hlsqs read-board)
       jm (when (and (false? ((find-broken-path ajp) :broken-path))
-                    (one-initial-jump? hlsqs ajp)) 
+                    (single-path? ajp)) 
            (exec-jump-move! hlc ajp))
       :else nil)))
 

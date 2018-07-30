@@ -129,7 +129,8 @@
   (let [{mb :read-board ne :new-entry} (move-checker {:from hlc :to (first hlsqs)} read-board)
         {kb :board ke :entry} (king-me ne mb)]
         (reset! board (unclick-squares [ke] kb))
-        (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))))
+        (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))
+        @board))
 
 (defn exec-jump-move! [hlc ajp]
     (let [move-path (filter (fn [{p :path :as entry}]
@@ -138,7 +139,7 @@
                                                        sqclk) p))
                                         entry)) ajp)]
       ((fn traverse [[{p :path} :as mp] c rb]
-         (when (some? p)
+         (if (some? p)
            (let [{mb :read-board ne :new-entry} (move-checker {:from c :to (last p)} 
                                                         (remove-checker (first p) rb))
                  {kb :board [kei ke] :entry} (king-me ne mb) 
@@ -146,7 +147,8 @@
              (reset! board nb)
              (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))
              (Thread/sleep mjs)
-             (traverse (rest mp) [kei (nb kei)] nb)))) move-path hlc @board)))
+             (traverse (rest mp) [kei (nb kei)] nb))
+           @board)) move-path hlc @board)))
 
 (defn get-clicked [ajp indicies]
   (set (filter some? (map (fn [{p :path :as entry}]
@@ -195,14 +197,23 @@
         hlc (hl-checker read-board)
         {sps :simple-paths ajp :all-jump-paths} (paths hlc read-board)
         sm (simple-move? hlsqs sps)
-        jm (jump-move? hlsqs ajp)]
-    (cond 
-      (and sm jm) nil ;not a valid move, so do nothing
-      sm (exec-simple-move! hlc hlsqs read-board)
-      jm (when (and (false? ((find-broken-path ajp) :broken-path))
-                    (single-path? ajp)) 
-           (exec-jump-move! hlc ajp))
-      :else nil)))
+        jm (jump-move? hlsqs ajp)
+        end-board (cond 
+                      (and sm jm) nil ;not a valid move, so do nothing
+                      sm (exec-simple-move! hlc hlsqs read-board)
+                      jm (when (and (false? ((find-broken-path ajp) :broken-path))
+                                    (single-path? ajp)) 
+                           (exec-jump-move! hlc ajp))
+                      :else nil)
+        end (when (some? end-board)
+              (game-over end-board))]
+      (cond 
+        (= end :team1) (do
+                         (JOptionPane/showMessageDialog (new JFrame) "Team 1 wins!")
+                         (reset! board (gen-board 0 [])))
+        (= end :team2) (do
+                         (JOptionPane/showMessageDialog (new JFrame) "Team 2 wins!")
+                         (reset! board (gen-board 0 []))))))
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 

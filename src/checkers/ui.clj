@@ -198,43 +198,44 @@
                          (reset! board (gen-board 0 [])))
         (= team :team2) (do
                          (JOptionPane/showMessageDialog (new JFrame) "Team 2 wins!")
-                         (reset! board (gen-board 0 [])))))
+                         (reset! board (gen-board 0 []))))
+  (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))
 
-(defn game-over? [read-board]
-  (let [end-game (when (some? read-board)
-                       (game-over read-board))]
-    (contains? #{:team1 :team2} end-game)))
+(defn winner [read-board]
+  (let [w (when (some? read-board)
+                (game-over read-board))]
+    (when (contains? #{:team1 :team2} w)
+      w)))
 
-(defn computer-move! [read-board]
-  (let [{nb :read-board} (rand-chk-move-new read-board)]
-    (Thread/sleep 500) ;"think" for a bit
-    (let [go (game-over? nb)] 
-      (if go
-        (reset-game! go)
-        (do 
-          (reset! board nb)
-          (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))))))
+(defn computer-move! [read-board move-func]
+  (let [{nb :read-board} (move-func read-board)]
+    (Thread/sleep 400) ;"think" for a bit
+     (let [w (winner read-board)] 
+       (if (some? w)
+         (reset-game! w)
+         (do 
+           (reset! board nb)
+           (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))))))
 
-(defn button-click [action-event]
-  (let [read-board (get-board)
-        hlsqs (hl-squares read-board)
+(defn human-move [read-board]
+  (let [hlsqs (hl-squares read-board)
         hlc (hl-checker read-board)
         {sps :simple-paths ajp :all-jump-paths} (paths hlc read-board)
         sm (simple-move? hlsqs sps)
-        jm (jump-move? hlsqs ajp)
-        end-board (cond 
-                      (and sm jm) nil ;not a valid move, so do nothing
-                      sm (exec-simple-move! hlc hlsqs read-board)
-                      jm (when (and (false? ((find-broken-path ajp) :broken-path))
-                                    (single-path? ajp)) 
-                           (exec-jump-move! hlc ajp))
-                      :else nil)
-        end (when (some? end-board)
-              (game-over end-board))]
-    (let [go (game-over? end-board)] 
-      (if go
-        (reset-game! go)
-        (computer-move! end-board)))))
+        jm (jump-move? hlsqs ajp)]
+    (cond (and sm jm) nil ;not a valid move, so do nothing
+          sm (exec-simple-move! hlc hlsqs read-board)
+          jm (when (and (false? ((find-broken-path ajp) :broken-path))
+                        (single-path? ajp)) 
+               (exec-jump-move! hlc ajp)))))
+
+(defn button-click [action-event]
+  (let [hm (human-move @board)]
+    (when (some? hm)
+        (let [w (winner @board)] 
+          (if (some? w)
+            (reset-game! w)
+            (computer-move! @board rand-chk-move))))))
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 

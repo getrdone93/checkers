@@ -8,21 +8,7 @@
 (defn random-jump [ajp]
   (ajp (first (shuffle ((first ajp) :next)))))
 
-;
-;come back with
-;(valid-move? {:from hl-c :to clicked-square} read-board)
-;and {:from hl-c :to clicked-square}
 (defn rand-chk-move [read-board] 
-  (let [[checker {sps :simple-paths ajp :all-jump-paths}] 
-        (first (shuffle (movable-checkers team read-board)))]
-    (cond
-      (some? ajp) {:from checker :to (random-jump ajp)}
-      (some? sps) {:from checker :to (first (shuffle sps))}
-      ;if we get here, then theres a problem with movable checkers
-      :else nil)))
-
-
-(defn rand-chk-move-new [read-board] 
   (let [[checker {sps :simple-paths ajp :all-jump-paths}] 
         (first (shuffle (movable-checkers team read-board)))]
     (cond

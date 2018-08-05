@@ -6,7 +6,7 @@
 
 
 (defn random-jump [ajp]
-  (last ((ajp (first (shuffle ((first ajp) :next)))) :path)))
+  (ajp (first (shuffle ((first ajp) :next)))))
 
 ;
 ;come back with
@@ -16,10 +16,17 @@
   (let [[checker {sps :simple-paths ajp :all-jump-paths}] 
         (first (shuffle (movable-checkers team read-board)))]
     (cond
-      (and (some? sps) (some? ajp)) (if (zero? (rand-int 2))
-                                      {:from checker :to (first (shuffle sps))}
-                                      {:from checker :to (random-jump ajp)})
-      (some? sps) {:from checker :to (first (shuffle sps))}
       (some? ajp) {:from checker :to (random-jump ajp)}
+      (some? sps) {:from checker :to (first (shuffle sps))}
       ;if we get here, then theres a problem with movable checkers
+      :else nil)))
+
+
+(defn rand-chk-move-new [read-board] 
+  (let [[checker {sps :simple-paths ajp :all-jump-paths}] 
+        (first (shuffle (movable-checkers team read-board)))]
+    (cond
+      (some? ajp) (let [{p :path} (random-jump ajp)]
+                    (move-checker {:from checker :to (last p)} (remove-checker (first p) read-board)))
+      (some? sps) (move-checker {:from checker :to (first (shuffle sps))} read-board)
       :else nil)))

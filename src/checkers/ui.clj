@@ -191,6 +191,30 @@
                (traverse (rest next-set) jp cp)))))
        {:broken-path false :path cp})) ns ajp []))
 
+(defn reset-game! [team]
+  (cond 
+        (= team :team1) (do
+                         (JOptionPane/showMessageDialog (new JFrame) "Team 1 wins!")
+                         (reset! board (gen-board 0 [])))
+        (= team :team2) (do
+                         (JOptionPane/showMessageDialog (new JFrame) "Team 2 wins!")
+                         (reset! board (gen-board 0 [])))))
+
+(defn game-over? [read-board]
+  (let [end-game (when (some? read-board)
+                       (game-over read-board))]
+    (contains? #{:team1 :team2} end-game)))
+
+(defn computer-move! [read-board]
+  (let [{nb :read-board} (rand-chk-move-new read-board)]
+    (Thread/sleep 500) ;"think" for a bit
+    (let [go (game-over? nb)] 
+      (if go
+        (reset-game! go)
+        (do 
+          (reset! board nb)
+          (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))))))
+
 (defn button-click [action-event]
   (let [read-board (get-board)
         hlsqs (hl-squares read-board)
@@ -207,13 +231,10 @@
                       :else nil)
         end (when (some? end-board)
               (game-over end-board))]
-      (cond 
-        (= end :team1) (do
-                         (JOptionPane/showMessageDialog (new JFrame) "Team 1 wins!")
-                         (reset! board (gen-board 0 [])))
-        (= end :team2) (do
-                         (JOptionPane/showMessageDialog (new JFrame) "Team 2 wins!")
-                         (reset! board (gen-board 0 []))))))
+    (let [go (game-over? end-board)] 
+      (if go
+        (reset-game! go)
+        (computer-move! end-board)))))
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 

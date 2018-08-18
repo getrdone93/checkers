@@ -8,7 +8,7 @@
  '(java.awt Color Graphics Dimension BorderLayout Shape)
  '(java.awt.image BufferedImage)
  '(java.awt.geom Rectangle2D$Double Ellipse2D$Double)
- '(javax.swing JPanel JFrame JTextArea JButton AbstractButton)
+ '(javax.swing JPanel JFrame JTextArea JButton AbstractButton JOptionPane)
  '(java.awt.event MouseAdapter MouseEvent ActionListener))
 
 (def dim 80)
@@ -207,14 +207,15 @@
     (when (contains? #{:team1 :team2} w)
       w)))
 
-(defn computer-move! [read-board move-func]
-  (let [{nb :read-board} (move-func read-board)]
-    (Thread/sleep 400) ;"think" for a bit
+(defn computer-move! [read-board move-func think-time]
+  (let [{nb :read-board ne :new-entry} (move-func read-board)
+        {kb :board ke :entry} (king-me ne nb)]
+    (Thread/sleep think-time) ;"think" for a bit
      (let [w (winner read-board)] 
        (if (some? w)
          (reset-game! w)
          (do 
-           (reset! board nb)
+           (reset! board kb)
            (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))))))
 
 (defn human-move [read-board]
@@ -235,7 +236,7 @@
         (let [w (winner @board)] 
           (if (some? w)
             (reset-game! w)
-            (computer-move! @board rand-chk-move))))))
+            (computer-move! @board rand-chk-move 400))))))
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 

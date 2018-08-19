@@ -234,6 +234,24 @@
                                                      (when (= chk-t tm)
                                                        entry)) % team) read-board))))
 
+(defn get-moves [mov-chks move-key]
+  (filter some? (map (fn [[chk {mv move-key}]]
+                                      (when (some? mv)
+                                        [chk {move-key mv}])) mov-chks)))
+
+(defn get-simples [mov-chks]
+  (get-moves mov-chks :simple-paths))
+
+(defn get-jumps [mov-chks]
+  (get-moves mov-chks :all-jump-paths))
+
+(defn valid-moves [team read-board]
+	(let [mov-chks (movable-checkers team read-board)
+	      jumps (get-jumps mov-chks)]
+	  (if (empty? jumps)
+	    (get-simples mov-chks)
+	    jumps)))
+
 (defn movable-checkers [team read-board]
   (set (filter some? (map-indexed #((fn [ind {{[t _] :team} :checker :as entry} tm]
                                       (let [paths (paths [ind entry] read-board)]

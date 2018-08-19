@@ -17,6 +17,7 @@
 (def board (atom (gen-board 0 [])))
 (def human-team :team2)
 (def mjs 900)
+(def tie-limit 20)
 
 (defn get-board [] @board)
 (defn hl-shift [cp] (- cp 4))
@@ -192,20 +193,23 @@
        {:broken-path false :path cp})) ns ajp []))
 
 (defn reset-game! [team]
-  (cond 
-        (= team :team1) (do
-                         (JOptionPane/showMessageDialog (new JFrame) "Team 1 wins!")
-                         (reset! board (gen-board 0 [])))
-        (= team :team2) (do
-                         (JOptionPane/showMessageDialog (new JFrame) "Team 2 wins!")
-                         (reset! board (gen-board 0 []))))
+  (do
+    (JOptionPane/showMessageDialog (new JFrame) (cond
+                                                  (= team :team1) "Team 1 wins!"
+                                                  (= team :team2) "Team 2 wins!"
+                                                  (= team :tie) "Draw! Nobody wins!"))
+    (reset! board (gen-board 0 [])))
   (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))
 
-(defn winner [read-board]
+(defn winner-old [read-board]
   (let [w (when (some? read-board)
-                (game-over read-board))]
+                (game-over read-board tie-state tie-limit))]
     (when (contains? #{:team1 :team2} w)
       w)))
+
+(defn winner [read-board]
+  (when (some? read-board)
+        (game-over read-board tie-state tie-limit)))
 
 (defn computer-move! [read-board move-func think-time]
   (let [{nb :read-board ne :new-entry} (move-func read-board)

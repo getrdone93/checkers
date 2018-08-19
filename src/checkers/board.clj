@@ -240,10 +240,23 @@
                                         (when (and (= t tm) (not= (set (vals paths)) #{nil})) 
                                           [[ind entry] paths]))) %1 %2 team) read-board))))
 
-(defn game-over [read-board] 
-  (cond
-    (or (zero? (count (checkers :team1 read-board))) 
-        (zero? (count (movable-checkers :team1 read-board)))) :team2
-    (or (zero? (count (checkers :team2 read-board)))
-        (zero? (count (movable-checkers :team2 read-board)))) :team1
-    :else nil))
+(def tie-state (atom {:board [] :team-counts #{} :times 0}))
+
+(defn n-move-tie [{cb :board tcs :team-counts t :times} nb]
+        (let [ntcs (set [(count (checkers :team1 nb)) 
+                         (count (checkers :team2 nb))])]
+          (if (= ntcs tcs)
+            {:board cb :team-counts tcs :times (inc t)}
+            {:board nb :team-counts ntcs :times 1})))
+
+(defn game-over [read-board tie-st tie-limit]
+	(let [chk-t1 (count (checkers :team1 read-board))
+	      mv-t1 (count (movable-checkers :team1 read-board))
+        chk-t2 (count (checkers :team2 read-board))
+        mv-t2 (count (movable-checkers :team2 read-board))]
+    (swap! tie-st #(n-move-tie % read-board))
+		(cond 
+		  (or (and (= 0 mv-t1 mv-t2) (= chk-t1 chk-t2))
+        (>= (@tie-st :times) tie-limit)) :tie
+	    (or (zero? chk-t1) (zero? mv-t1)) :team2
+	    (or (zero? chk-t2) (zero? mv-t2)) :team1)))

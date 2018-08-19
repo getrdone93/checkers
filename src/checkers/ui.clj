@@ -201,12 +201,6 @@
     (reset! board (gen-board 0 [])))
   (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))
 
-(defn winner-old [read-board]
-  (let [w (when (some? read-board)
-                (game-over read-board tie-state tie-limit))]
-    (when (contains? #{:team1 :team2} w)
-      w)))
-
 (defn winner [read-board]
   (when (some? read-board)
         (game-over read-board tie-state tie-limit)))

@@ -239,6 +239,12 @@
                                       (when (some? mv)
                                         [chk {move-key mv}])) mov-chks)))
 
+(defn movable-checkers [team read-board]
+  (set (filter some? (map-indexed #((fn [ind {{[t _] :team} :checker :as entry} tm]
+                                      (let [paths (paths [ind entry] read-board)]
+                                        (when (and (= t tm) (not= (set (vals paths)) #{nil})) 
+                                          [[ind entry] paths]))) %1 %2 team) read-board))))
+
 (defn get-simples [mov-chks]
   (get-moves mov-chks :simple-paths))
 
@@ -251,12 +257,6 @@
 	  (if (empty? jumps)
 	    (get-simples mov-chks)
 	    jumps)))
-
-(defn movable-checkers [team read-board]
-  (set (filter some? (map-indexed #((fn [ind {{[t _] :team} :checker :as entry} tm]
-                                      (let [paths (paths [ind entry] read-board)]
-                                        (when (and (= t tm) (not= (set (vals paths)) #{nil})) 
-                                          [[ind entry] paths]))) %1 %2 team) read-board))))
 
 (def tie-state (atom {:board [] :team-counts #{} :times 0}))
 

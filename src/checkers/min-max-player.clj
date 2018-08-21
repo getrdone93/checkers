@@ -9,5 +9,5 @@
       (= over other-team) -1
       (= over :tie) 0)))
 
-(defn generate-tree []
+(defn generate-tree [read-board]
   )

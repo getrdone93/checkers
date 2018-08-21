@@ -67,6 +67,14 @@
                                      (/ (* scale dim) 5) 
                                      (/ (* scale dim) 5)))))
 
+(defn button-click [action-event]
+  (let [hm (human-move @board)]
+    (when (some? hm)
+        (let [w (winner @board)] 
+          (if (some? w)
+            (reset-game! w)
+            (computer-move! @board rand-chk-move 400))))))
+
 (defn hl-element [ele-key read-board]
   (set (filter some? (map-indexed 
                        (fn [index {ele ele-key {clicked :clicked} ele-key :as entry}] 
@@ -227,14 +235,6 @@
           jm (when (and (false? ((find-broken-path ajp) :broken-path))
                         (single-path? ajp)) 
                (exec-jump-move! hlc ajp)))))
-
-(defn button-click [action-event]
-  (let [hm (human-move @board)]
-    (when (some? hm)
-        (let [w (winner @board)] 
-          (if (some? w)
-            (reset-game! w)
-            (computer-move! @board rand-chk-move 400))))))
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 

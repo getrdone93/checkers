@@ -57,6 +57,8 @@
                                                              :king false})})) 
                     br)))
 
+;think about having this taking a map {:entry entry :board board}
+;for better composition
 (defn king-me [[ind {chk :checker
                    {[team _] :team
                     king :king} :checker :as entry}] read-board] 
@@ -64,7 +66,7 @@
     (let [nc (assoc entry :checker (assoc chk :king true))
           nb (assoc read-board ind nc)]
       {:board nb :entry [ind nc]})
-    {:board read-board :entry [ind entry]})) 
+    {:board read-board :entry [ind entry]}))
 
 (def move-func {:team2 [(fn [ind] (- ind 9)) (fn [ind] (- ind 7))]
                 :team1 [(fn [ind] (+ ind 9)) (fn [ind] (+ ind 7))]})

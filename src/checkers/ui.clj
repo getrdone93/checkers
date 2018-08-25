@@ -39,15 +39,6 @@
                    (.fillOval im-graph (king-shift chkx) (king-shift chky) king-dim king-dim)))
              (draw-board im-graph (rest eles))))
 
-(def submit-button
-  (let [sb (new JButton "SUBMIT MOVE")
-        _ (. sb (setVerticalTextPosition (AbstractButton/CENTER)))
-        _ (. sb (setHorizontalTextPosition (AbstractButton/LEADING)))
-        _ (. sb (addActionListener (proxy [ActionListener] []
-                                     (actionPerformed [ae] (button-click ae)))))
-        {{[_ y] :point} :square} (last (get-board))
-        _ (. sb (setBounds 0 (+ y 100) (+ y 100) 60))]
-    sb))
 
 (defn color-frame [g read-board]
   (let [img (new BufferedImage (* scale dim) (* scale dim) (. BufferedImage TYPE_INT_ARGB))
@@ -67,13 +58,16 @@
                                      (/ (* scale dim) 5) 
                                      (/ (* scale dim) 5)))))
 
-(defn button-click [action-event]
-  (let [hm (human-move @board)]
-    (when (some? hm)
-        (let [w (winner @board)] 
-          (if (some? w)
-            (reset-game! w)
-            (computer-move! @board rand-chk-move 400))))))
+(def submit-button
+  (let [sb (new JButton "SUBMIT MOVE")
+        _ (. sb (setVerticalTextPosition (AbstractButton/CENTER)))
+        _ (. sb (setHorizontalTextPosition (AbstractButton/LEADING)))
+        _ (. sb (addActionListener (proxy [ActionListener] []
+                                     (actionPerformed [ae] (button-click ae)))))
+        {{[_ y] :point} :square} (last (get-board))
+        _ (. sb (setBounds 0 (+ y 100) (+ y 100) 60))]
+    sb))
+
 
 (defn hl-element [ele-key read-board]
   (set (filter some? (map-indexed 
@@ -213,17 +207,6 @@
   (when (some? read-board)
         (game-over read-board tie-state tie-limit)))
 
-(defn computer-move! [read-board move-func think-time]
-  (let [{nb :read-board ne :new-entry} (move-func read-board)
-        {kb :board ke :entry} (king-me ne nb)]
-    (Thread/sleep think-time) ;"think" for a bit
-     (let [w (winner read-board)] 
-       (if (some? w)
-         (reset-game! w)
-         (do 
-           (reset! board kb)
-           (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))))))
-
 (defn human-move [read-board]
   (let [hlsqs (hl-squares read-board)
         hlc (hl-checker read-board)
@@ -235,6 +218,25 @@
           jm (when (and (false? ((find-broken-path ajp) :broken-path))
                         (single-path? ajp)) 
                (exec-jump-move! hlc ajp)))))
+
+(defn computer-move! [read-board move-func think-time]
+  (let [{nb :read-board ne :new-entry} (move-func read-board)
+        {kb :board ke :entry} (king-me ne nb)]
+    (Thread/sleep think-time) ;"think" for a bit
+     (let [w (winner read-board)] 
+       (if (some? w)
+         (reset-game! w)
+         (do 
+           (reset! board kb)
+           (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))))))
+
+(defn button-click [action-event]
+  (let [hm (human-move @board)]
+    (when (some? hm)
+        (let [w (winner @board)] 
+          (if (some? w)
+            (reset-game! w)
+            (computer-move! @board rand-chk-move 400))))))
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 

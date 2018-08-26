@@ -58,17 +58,6 @@
                                      (/ (* scale dim) 5) 
                                      (/ (* scale dim) 5)))))
 
-(def submit-button
-  (let [sb (new JButton "SUBMIT MOVE")
-        _ (. sb (setVerticalTextPosition (AbstractButton/CENTER)))
-        _ (. sb (setHorizontalTextPosition (AbstractButton/LEADING)))
-        _ (. sb (addActionListener (proxy [ActionListener] []
-                                     (actionPerformed [ae] (button-click ae)))))
-        {{[_ y] :point} :square} (last (get-board))
-        _ (. sb (setBounds 0 (+ y 100) (+ y 100) 60))]
-    sb))
-
-
 (defn hl-element [ele-key read-board]
   (set (filter some? (map-indexed 
                        (fn [index {ele ele-key {clicked :clicked} ele-key :as entry}] 
@@ -207,18 +196,6 @@
   (when (some? read-board)
         (game-over read-board tie-state tie-limit)))
 
-(defn human-move [read-board]
-  (let [hlsqs (hl-squares read-board)
-        hlc (hl-checker read-board)
-        {sps :simple-paths ajp :all-jump-paths} (paths hlc read-board)
-        sm (simple-move? hlsqs sps)
-        jm (jump-move? hlsqs ajp)]
-    (cond (and sm jm) nil ;not a valid move, so do nothing
-          sm (exec-simple-move! hlc hlsqs read-board)
-          jm (when (and (false? ((find-broken-path ajp) :broken-path))
-                        (single-path? ajp)) 
-               (exec-jump-move! hlc ajp)))))
-
 (defn computer-move! [read-board move-func think-time]
   (let [{nb :read-board ne :new-entry} (move-func read-board)
         {kb :board ke :entry} (king-me ne nb)]
@@ -229,14 +206,6 @@
          (do 
            (reset! board kb)
            (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))))))
-
-(defn button-click [action-event]
-  (let [hm (human-move @board)]
-    (when (some? hm)
-        (let [w (winner @board)] 
-          (if (some? w)
-            (reset-game! w)
-            (computer-move! @board rand-chk-move 400))))))
 
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
@@ -267,3 +236,35 @@
                  (-> (.getContentPane) (.add panel) (.addMouseListener ml))
                  .pack 
                  .show))
+
+(defn human-move [read-board]
+  (let [hlsqs (hl-squares read-board)
+        hlc (hl-checker read-board)
+        {sps :simple-paths ajp :all-jump-paths} (paths hlc read-board)
+        sm (simple-move? hlsqs sps)
+        jm (jump-move? hlsqs ajp)]
+    (cond (and sm jm) nil ;not a valid move, so do nothing
+          sm (exec-simple-move! hlc hlsqs read-board)
+          jm (when (and (false? ((find-broken-path ajp) :broken-path))
+                        (single-path? ajp)) 
+               (exec-jump-move! hlc ajp)))))
+
+
+(defn button-click [action-event]
+  (let [hm (human-move @board)]
+    (when (some? hm)
+        (let [w (winner @board)] 
+          (if (some? w)
+            (reset-game! w)
+            (computer-move! @board rand-chk-move 400))))))
+
+(def submit-button
+  (let [sb (new JButton "SUBMIT MOVE")
+        _ (. sb (setVerticalTextPosition (AbstractButton/CENTER)))
+        _ (. sb (setHorizontalTextPosition (AbstractButton/LEADING)))
+        _ (. sb (addActionListener (proxy [ActionListener] []
+                                     (actionPerformed [ae] (button-click ae)))))
+        {{[_ y] :point} :square} (last (get-board))
+        _ (. sb (setBounds 0 (+ y 100) (+ y 100) 60))]
+    sb))
+

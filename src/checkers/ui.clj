@@ -230,13 +230,6 @@
                                                                          (flip-clicked clicked-square :square read-board))))
                  (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))))))
 
-(defn frame [] (doto 
-                 (new JFrame)
-                 (-> (.getContentPane) (.add submit-button))
-                 (-> (.getContentPane) (.add panel) (.addMouseListener ml))
-                 .pack 
-                 .show))
-
 (defn human-move [read-board]
   (let [hlsqs (hl-squares read-board)
         hlc (hl-checker read-board)
@@ -248,7 +241,6 @@
           jm (when (and (false? ((find-broken-path ajp) :broken-path))
                         (single-path? ajp)) 
                (exec-jump-move! hlc ajp)))))
-
 
 (defn button-click [action-event]
   (let [hm (human-move @board)]
@@ -267,4 +259,11 @@
         {{[_ y] :point} :square} (last (get-board))
         _ (. sb (setBounds 0 (+ y 100) (+ y 100) 60))]
     sb))
+
+(defn frame [] (doto 
+                 (new JFrame)
+                 (-> (.getContentPane) (.add submit-button))
+                 (-> (.getContentPane) (.add panel) (.addMouseListener ml))
+                 .pack 
+                 .show))
 

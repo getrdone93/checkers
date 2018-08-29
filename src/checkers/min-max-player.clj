@@ -18,9 +18,9 @@
 (defn take-action [state {[ci chk] :move-checker sp :simple-paths ajp :all-jump-paths}]
   (cond
     (and (some? sp) (some? ajp)) nil ;bad input
-    (some? sp) (vec (map (fn [mv] 
+    (some? sp) (mapv (fn [mv] 
                            (let [{rb :read-board ne :new-entry} (move-checker {:from [ci chk] :to mv})]
-                             ((king-me ne rb) :board))) sp))
+                             ((king-me ne rb) :board))) sp)
     (some? ajp) ((fn enumerate-jumps [[{p :path ns :next} :as path] res]
                     ) ajp [])))
 
@@ -31,3 +31,10 @@
      (let [{mb :read-board ne :new-entry} (move-checker {:from sc :to (last p)} 
                                                         (remove-checker (first p) state))]
        ((king-me ne mb) :board)))
+
+
+
+(def dfs [[{p :path ns :next} :as path] res cb]
+               (if (empty? ns)
+                 cb
+                 ))

@@ -32,3 +32,10 @@
                                                         (remove-checker (first p) state))]
        ((king-me ne mb) :board)))
 
+(defn dfs [ajp read-board res]
+  ((fn recur-ns [ajp-ind jps b]
+     (let [{cp :path cns :next} (jps ajp-ind)]
+       (if (nil? (first cns))
+
+         (let [{nep :path nens :next} (jps (first ncs))]
+           ))))) 0 ajp read-board)

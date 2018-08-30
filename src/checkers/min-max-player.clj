@@ -40,3 +40,5 @@
                board-mc [mci (b mci)]
                nb (exec-jump {:from board-sc :to board-mc} jc b)]
           (recur jps ajp-ind b (conj curr-ns nji) (into r (dfs jps nji nb r))))))) ajp ajp-i read-board #{} res))
+
+;(checkers.min-max-player/dfs ((second (first two-jump-vm)) :all-jump-paths) 0 @board [])

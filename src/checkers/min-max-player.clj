@@ -35,7 +35,9 @@
            [sci _] (last p)
            nji (first (difference cns curr-ns))]
        (if (nil? nji)
-         (conj r b)
+         (if (empty? cns)
+           (conj r b)
+           r)
          (let [{[jc [mci _] :as nep] :path nens :next} (jps nji)
                board-sc [sci (b sci)]
                board-mc [mci (b mci)]

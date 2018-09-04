@@ -30,7 +30,7 @@
        ((king-me ne mb) :board)))
 
 (defn dfs [ajp ajp-i read-board res]
-  ((fn recur-ns [jps ajp-ind b curr-ns r]
+  ((fn [jps ajp-ind b curr-ns r]
      (let [{p :path cns :next} (jps ajp-ind)
            [sci _] (last p)
            nji (first (difference cns curr-ns))]

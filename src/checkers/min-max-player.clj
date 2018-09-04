@@ -1,33 +1,33 @@
 (ns checkers.min-max-player
-  (:refer checkers.board))
+  (:refer checkers.board)
+  (:refer clojure.set))
 
-(def evaluation [my-team other-team read-board]
+(defn evaluation [win-team other-team read-board]
   (let [over (game-over read-board)]
     (cond 
       (= over win-team) 1
       (= over other-team) -1
       (= over :tie) 0)))
 
-(defn max [[[[ind {{{t :team} :checker} :as entry}] paths] :as mov-chks] {la :last-action
-                                                                          s :state} other-team]
-  (let [utility (evaluation t other-team s)]
-    (if (contains? #{0 -1 1} utility)
-      {:last-action la :state s :utility utility}
-      )))
-
-(defn take-action [state {[ci chk] :move-checker sp :simple-paths ajp :all-jump-paths}]
-  (cond
-    (and (some? sp) (some? ajp)) nil ;bad input
-    (some? sp) (vec (map (fn [mv] 
-                           (let [{rb :read-board ne :new-entry} (move-checker {:from [ci chk] :to mv})]
-                             ((king-me ne rb) :board))) sp))
-    (some? ajp) ((fn enumerate-jumps [[{p :path ns :next} :as path] res]
-                    ) ajp [])))
-
-
-;(exec-jump @board {:jump (second test-ajp) :source-checker (hl-checker @board)})
-
-(defn exec-jump [state {{p :path} :jump sc :source-checker}]
-     (let [{mb :read-board ne :new-entry} (move-checker {:from sc :to (last p)} 
-                                                        (remove-checker (first p) state))]
+(defn exec-jump [{from :from to :to :as move-form} jumped-chk read-board]
+     (let [{mb :read-board ne :new-entry} (move-checker move-form (remove-checker jumped-chk read-board))]
        ((king-me ne mb) :board)))
+
+(defn dfs [ajp ajp-i read-board res]
+  ((fn [jps ajp-ind b curr-ns r]
+     (let [{p :path cns :next} (jps ajp-ind)
+           [sci _] (last p)
+           nji (first (difference cns curr-ns))]
+       (if (nil? nji)
+         (if (empty? cns)
+           (conj r b)
+           r)
+         (let [{[jc [mci _] :as nep] :path nens :next} (jps nji)
+               board-sc [sci (b sci)]
+               board-mc [mci (b mci)]
+               nb (exec-jump {:from board-sc :to board-mc} jc b)]
+          (recur jps ajp-ind b (conj curr-ns nji) (into r (dfs jps nji nb r))))))) ajp ajp-i read-board #{} res))
+
+; (def dfs-test (map (fn [[chk {ajp :all-jump-paths}]]
+;                    (checkers.min-max-player/dfs ajp 0 four-jump-board [])) four-jump-vm))
+            

@@ -248,7 +248,7 @@
         (let [w (winner @board)] 
           (if (some? w)
             (reset-game! w)
-            (computer-move! @board rand-chk-move 400))))))
+             (comment (computer-move! @board rand-chk-move 400)))))))
 
 (def submit-button
   (let [sb (new JButton "SUBMIT MOVE")

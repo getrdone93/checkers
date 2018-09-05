@@ -21,6 +21,7 @@
 (def cyan (. Color cyan))
 (def yellow (. Color yellow))
 (def magenta (. Color magenta))
+(def default-tie-limit 20)
 
 (defn checker-point [sqx sqy] [(+ sqx shift) (+ sqy shift)])
 
@@ -269,14 +270,15 @@
             {:board cb :team-counts tcs :times (inc t)}
             {:board nb :team-counts ntcs :times 1})))
 
-(defn game-over [read-board tie-st tie-limit]
-	(let [chk-t1 (count (checkers :team1 read-board))
-	      mv-t1 (count (movable-checkers :team1 read-board))
-        chk-t2 (count (checkers :team2 read-board))
-        mv-t2 (count (movable-checkers :team2 read-board))]
-    (swap! tie-st #(n-move-tie % read-board))
-		(cond 
-		  (or (and (= 0 mv-t1 mv-t2) (= chk-t1 chk-t2))
-        (>= (@tie-st :times) tie-limit)) :tie
-	    (or (zero? chk-t1) (zero? mv-t1)) :team2
-	    (or (zero? chk-t2) (zero? mv-t2)) :team1)))
+(defn game-over
+  ([read-board] (game-over read-board tie-state default-tie-limit))
+  ([read-board tie-st tie-limit] (let [chk-t1 (count (checkers :team1 read-board))
+                                       mv-t1 (count (movable-checkers :team1 read-board))
+                                       chk-t2 (count (checkers :team2 read-board))
+                                       mv-t2 (count (movable-checkers :team2 read-board))]
+                                   (swap! tie-st #(n-move-tie % read-board))
+                                   (cond
+                                    (or (and (= 0 mv-t1 mv-t2) (= chk-t1 chk-t2))
+                                        (>= (@tie-st :times) tie-limit)) :tie
+                                        (or (zero? chk-t1) (zero? mv-t1)) :team2
+                                        (or (zero? chk-t2) (zero? mv-t2)) :team1))))

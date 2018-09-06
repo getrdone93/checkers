@@ -32,33 +32,63 @@
           (recur jps ajp-ind b (conj curr-ns nji) (into r (dfs jps nji nb r))))))) ajp ajp-i read-board #{} res))
 
 (defn take-action
-  ([read-board move-checker simple-paths] (mapv (fn [mv] 
-                                                  (let [{rb :read-board ne :new-entry}
-                                                        (move-checker {:from move-checker :to mv})]
-                                                    ((king-me ne rb) :board))) simple-paths))
+  ([read-board mc simple-paths] (mapv (fn [mv] 
+                                        (let [{rb :read-board ne :new-entry}
+                                              (move-checker {:from mc :to mv} read-board)]
+                                          ((king-me ne rb) :board))) simple-paths))
   ([read-board all-jump-paths] (dfs all-jump-paths 0 read-board [])))
 
 (defn next-states [state tm] (mapv (fn [[chk mv]]
                                 (cond 
-                                 (some? (mv :all-jump-paths)) (take-action @board (mv :all-jump-paths))
-                                 (some? (mv :simple-paths)) (take-action @board chk (mv :simple-paths))))
-                                (valid-moves state tm)))
+                                 (some? (mv :all-jump-paths)) (take-action state (mv :all-jump-paths))
+                                 (some? (mv :simple-paths)) (take-action state chk (mv :simple-paths))))
+                                (valid-moves tm state)))
 
-(defn max [state alpha beta ot]
-  (let [su (evaluate team ot state)]
-    (if (contains? {1 -1 0} su)
-      su
-      ((fn [[s :as poss-states]]
-        ) (reduce #(into %1 %2) (next-states state team))))))
+(defn next-states-flat [state tm]
+  (reduce #(into %1 %2) (next-states state tm)))
 
-;; (def dfs-test (mapv (fn [[chk {ajp :all-jump-paths}]]
-;;                     (checkers.min-max-player/dfs ajp 0 four-jump-board [])) four-jump-vm))
-             
+;; (defn general-search [state alpha beta ot min-max search-func ab-test recur-call v-init]
+;;   (let [su (evaluate team ot state)]
+;;     (if (contains? #{1 -1 0} su)
+;;       {:state state :value su}
+;;       ((fn [[s :as poss-states] pv a b]
+;;          (if (some? s)
+;;            (let [nv (min-max pv ((eval search-func) :value))]
+;;              (if ab-test
+;;                {:state s :value nv}
+;;                recur-call))
+;;            pv)) (next-states-flat state team) v-init alpha beta))))
 
-;; (defn take-action [read-board {chk :move-checker sp :simple-paths ajp :all-jump-paths}]
-;;   (cond
-;;     (and (some? sp) (some? ajp)) nil ;bad input
-;;     (some? sp) (mapv (fn [mv] 
-;;                            (let [{rb :read-board ne :new-entry} (move-checker {:from chk :to mv})]
-;;                              ((king-me ne rb) :board))) sp)
-;;     (some? ajp) (dfs ajp 0 read-board [])))
+;; (defn max-search [state alpha beta ot]
+;;   (general-search state alpha beta ot max '() '(>= nv b)
+;;                   '(recur (rest poss-states) nv (max a nv) b) Double/NEGATIVE_INFINITY))
+
+;; (defn min-search [state alpha beta ot]
+;;   (general-search state alpha beta ot min '(max-search s a b ot) '(<= nv a)
+;;                   '(recur (rest poss-states) nv a (min b nv)) Double/POSITIVE_INFINITY))
+
+(def max-args {:ab-test '(>= nv b) :rs-call '(recur (rest poss-states) nv (max a nv) b) :v-init Double/NEGATIVE_INFINITY
+               :min-max max})
+
+(def min-args {:ab-test '(<= nv a) :rs-call '(recur (rest poss-states) nv a (min b nv)) :v-init Double/POSITIVE_INFINITY
+               :min-max min})
+
+(defn general-search
+  ([state alpha beta ot] (general-search state alpha beta ot max (max-args :ab-test) (max-args :rs-call) (max-args :v-init)
+                                         '(s a b ot 4)))
+  ([state alpha beta ot dummy] (general-search state alpha beta ot min (min-args :ab-test) (min-args :rs-call) (min-args :v-init)
+                                               '(s a b ot)))
+  ([state alpha beta ot min-max ab-test recur-call v-init search-args]
+   (let [su (evaluate team ot state)]
+     (if (contains? #{1 -1 0} su)
+       {:state state :value su}
+       ((fn [[s :as poss-states] pv a b]
+          (if (some? s)
+            (let [nv (min-max pv ((apply general-search search-args) :value))]
+              (if ab-test
+                {:state s :value nv}
+                recur-call))
+            pv)) (next-states-flat state team) v-init alpha beta)))))
+
+(defn alpha-beta-search [state]
+  (general-search state Double/NEGATIVE_INFINITY Double/POSITIVE_INFINITY :team2))

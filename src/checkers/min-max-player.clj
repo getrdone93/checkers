@@ -48,16 +48,22 @@
 (defn next-states-flat [state tm]
   (reduce #(into %1 %2) (next-states state tm)))
 
-(defn general-search [state alpha beta ot min-max tie]
+(def calls (atom 0))
+
+(defn general-search [state alpha beta ot min-max tie d]
   (let [{su :utility t :tie} (evaluate team ot state tie)
         max? (= min-max max)]
+    (do
+      (swap! calls inc)
+      (if (= (mod @calls 5000) 0)
+        (println "calls " @calls " depth " d " su " su)))
     (if (contains? #{1 -1 0} su)
       {:state state :value su}
       ((fn [[s :as poss-states] pv a b]
          (if (some? s)
            (let [nv (min-max pv ((if max?
-                                   (general-search state alpha beta ot min t)
-                                   (general-search state alpha beta ot max t)) :value))]
+                                   (general-search s a b ot min t (inc d))
+                                   (general-search s a b ot max t (inc d))) :value))]
              (if (if max?
                    (>= nv b)
                    (<= nv a))
@@ -69,4 +75,5 @@
                                                          Double/NEGATIVE_INFINITY
                                                          Double/POSITIVE_INFINITY) alpha beta))))
 (defn alpha-beta-search [state]
-  (general-search state Double/NEGATIVE_INFINITY Double/POSITIVE_INFINITY :team2 max {:board [] :team-counts #{} :times 0}))
+  (general-search state Double/NEGATIVE_INFINITY Double/POSITIVE_INFINITY :team2 max {:board [] :team-counts #{} :times 0}
+                  0))

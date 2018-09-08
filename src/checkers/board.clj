@@ -272,6 +272,7 @@
 
 (defn game-over
   ([read-board] (game-over read-board tie-state default-tie-limit))
+  ([read-board tie-st] (game-over read-board tie-st default-tie-limit))
   ([read-board tie-st tie-limit] (let [chk-t1 (count (checkers :team1 read-board))
                                        mv-t1 (count (movable-checkers :team1 read-board))
                                        chk-t2 (count (checkers :team2 read-board))

@@ -73,22 +73,26 @@
 (def min-args {:ab-test '(<= nv a) :rs-call '(recur (rest poss-states) nv a (min b nv)) :v-init Double/POSITIVE_INFINITY
                :min-max min})
 
-(defn general-search
-  ([state alpha beta ot] (general-search state alpha beta ot max (max-args :ab-test) (max-args :rs-call) (max-args :v-init)
-                                         '(s a b ot 4)))
-  ([state alpha beta ot dummy] (general-search state alpha beta ot min (min-args :ab-test) (min-args :rs-call) (min-args :v-init)
-                                               '(s a b ot)))
-  ([state alpha beta ot min-max ab-test recur-call v-init search-args]
-   (let [su (evaluate team ot state)]
+(defn general-search [state alpha beta ot min-max]
+   (let [su (evaluate team ot state)
+         max? (= min-max max)]
      (if (contains? #{1 -1 0} su)
        {:state state :value su}
        ((fn [[s :as poss-states] pv a b]
           (if (some? s)
-            (let [nv (min-max pv ((apply general-search search-args) :value))]
-              (if ab-test
+            (let [nv (min-max pv ((if max?
+                                    (general-search state alpha beta ot min)
+                                    (general-search state alpha beta ot max)) :value))]
+              (if (if max?
+                    (>= nv b)
+                    (<= nv a))
                 {:state s :value nv}
-                recur-call))
-            pv)) (next-states-flat state team) v-init alpha beta)))))
+                (if max?
+                  (recur (rest poss-states) nv (max a nv) b)
+                  (recur (rest poss-states) nv a (min b nv)))))
+            pv)) (next-states-flat state team) (if max?
+                                                  Double/NEGATIVE_INFINITY
+                                                  Double/POSITIVE_INFINITY) alpha beta))))
 
 (defn alpha-beta-search [state]
-  (general-search state Double/NEGATIVE_INFINITY Double/POSITIVE_INFINITY :team2))
+  (general-search state Double/NEGATIVE_INFINITY Double/POSITIVE_INFINITY :team2 max))

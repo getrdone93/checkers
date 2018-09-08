@@ -90,9 +90,8 @@
                 (if max?
                   (recur (rest poss-states) nv (max a nv) b)
                   (recur (rest poss-states) nv a (min b nv)))))
-            pv)) (next-states-flat state team) (if max?
+            {:value pv})) (next-states-flat state team) (if max?
                                                   Double/NEGATIVE_INFINITY
                                                   Double/POSITIVE_INFINITY) alpha beta))))
-
 (defn alpha-beta-search [state]
   (general-search state Double/NEGATIVE_INFINITY Double/POSITIVE_INFINITY :team2 max))

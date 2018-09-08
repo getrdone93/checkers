@@ -4,13 +4,14 @@
 
 (def team :team1)
 
-(defn evaluate [win-team other-team read-board]
-  (let [over (game-over read-board)]
-    (cond 
-      (= over win-team) 1
-      (= over other-team) -1
-      (= over :tie) 0
-      :else :non-terminal)))
+(defn evaluate [win-team other-team read-board tie]
+  (let [{over :board-result t :tie} (game-over read-board tie)]
+    {:utility (cond 
+               (= over win-team) 1
+               (= over other-team) -1
+               (= over :tie) 0
+               :else :non-terminal)
+     :tie t}))
 
 (defn exec-jump [{from :from to :to :as move-form} jumped-chk read-board]
      (let [{mb :read-board ne :new-entry} (move-checker move-form (remove-checker jumped-chk read-board))]
@@ -47,51 +48,25 @@
 (defn next-states-flat [state tm]
   (reduce #(into %1 %2) (next-states state tm)))
 
-;; (defn general-search [state alpha beta ot min-max search-func ab-test recur-call v-init]
-;;   (let [su (evaluate team ot state)]
-;;     (if (contains? #{1 -1 0} su)
-;;       {:state state :value su}
-;;       ((fn [[s :as poss-states] pv a b]
-;;          (if (some? s)
-;;            (let [nv (min-max pv ((eval search-func) :value))]
-;;              (if ab-test
-;;                {:state s :value nv}
-;;                recur-call))
-;;            pv)) (next-states-flat state team) v-init alpha beta))))
-
-;; (defn max-search [state alpha beta ot]
-;;   (general-search state alpha beta ot max '() '(>= nv b)
-;;                   '(recur (rest poss-states) nv (max a nv) b) Double/NEGATIVE_INFINITY))
-
-;; (defn min-search [state alpha beta ot]
-;;   (general-search state alpha beta ot min '(max-search s a b ot) '(<= nv a)
-;;                   '(recur (rest poss-states) nv a (min b nv)) Double/POSITIVE_INFINITY))
-
-(def max-args {:ab-test '(>= nv b) :rs-call '(recur (rest poss-states) nv (max a nv) b) :v-init Double/NEGATIVE_INFINITY
-               :min-max max})
-
-(def min-args {:ab-test '(<= nv a) :rs-call '(recur (rest poss-states) nv a (min b nv)) :v-init Double/POSITIVE_INFINITY
-               :min-max min})
-
-(defn general-search [state alpha beta ot min-max]
-   (let [su (evaluate team ot state)
-         max? (= min-max max)]
-     (if (contains? #{1 -1 0} su)
-       {:state state :value su}
-       ((fn [[s :as poss-states] pv a b]
-          (if (some? s)
-            (let [nv (min-max pv ((if max?
-                                    (general-search state alpha beta ot min)
-                                    (general-search state alpha beta ot max)) :value))]
-              (if (if max?
-                    (>= nv b)
-                    (<= nv a))
-                {:state s :value nv}
-                (if max?
-                  (recur (rest poss-states) nv (max a nv) b)
-                  (recur (rest poss-states) nv a (min b nv)))))
-            {:value pv})) (next-states-flat state team) (if max?
-                                                  Double/NEGATIVE_INFINITY
-                                                  Double/POSITIVE_INFINITY) alpha beta))))
+(defn general-search [state alpha beta ot min-max tie]
+  (let [{su :utility t :tie} (evaluate team ot state tie)
+        max? (= min-max max)]
+    (if (contains? #{1 -1 0} su)
+      {:state state :value su}
+      ((fn [[s :as poss-states] pv a b]
+         (if (some? s)
+           (let [nv (min-max pv ((if max?
+                                   (general-search state alpha beta ot min t)
+                                   (general-search state alpha beta ot max t)) :value))]
+             (if (if max?
+                   (>= nv b)
+                   (<= nv a))
+               {:state s :value nv}
+               (if max?
+                 (recur (rest poss-states) nv (max a nv) b)
+                 (recur (rest poss-states) nv a (min b nv)))))
+           {:value pv})) (next-states-flat state team) (if max?
+                                                         Double/NEGATIVE_INFINITY
+                                                         Double/POSITIVE_INFINITY) alpha beta))))
 (defn alpha-beta-search [state]
-  (general-search state Double/NEGATIVE_INFINITY Double/POSITIVE_INFINITY :team2 max))
+  (general-search state Double/NEGATIVE_INFINITY Double/POSITIVE_INFINITY :team2 max {:board [] :team-counts #{} :times 0}))

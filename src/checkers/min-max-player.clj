@@ -33,22 +33,23 @@
           (recur jps ajp-ind b (conj curr-ns nji) (into r (dfs jps nji nb r))))))) ajp ajp-i read-board #{} res))
 
 (defn take-action
-  ([read-board mc simple-paths] (mapv (fn [mv] 
+  ([read-board sc simple-paths] (mapv (fn [mv] 
                                         (let [{rb :read-board ne :new-entry}
-                                              (move-checker {:from mc :to mv} read-board)]
+                                              (move-checker {:from sc :to mv} read-board)]
                                           ((king-me ne rb) :board))) simple-paths))
   ([read-board all-jump-paths] (dfs all-jump-paths 0 read-board [])))
 
 (defn next-states [state tm] (mapv (fn [[chk mv]]
-                                (cond 
-                                 (some? (mv :all-jump-paths)) (take-action state (mv :all-jump-paths))
-                                 (some? (mv :simple-paths)) (take-action state chk (mv :simple-paths))))
-                                (valid-moves tm state)))
+                                     (cond 
+                                      (some? (mv :all-jump-paths)) (take-action state (mv :all-jump-paths))
+                                      (some? (mv :simple-paths)) (take-action state chk (mv :simple-paths))))
+                                   (valid-moves tm state)))
 
 (defn next-states-flat [state tm]
   (reduce #(into %1 %2) (next-states state tm)))
 
 (def calls (atom 0))
+(def max-depth 5)
 
 (defn general-search [state alpha beta ot min-max tie d]
   (let [{su :utility t :tie} (evaluate team ot state tie)
@@ -57,8 +58,10 @@
       (swap! calls inc)
       (if (= (mod @calls 5000) 0)
         (println "calls " @calls " depth " d " su " su)))
-    (if (contains? #{1 -1 0} su)
-      {:state state :value su}
+    (if (or (contains? #{1 -1 0} su) (>= d max-depth))
+      {:state state :value (if (= su :non-terminal)
+                             (rand 1)
+                             su)}
       ((fn [[s :as poss-states] pv a b]
          (if (some? s)
            (let [nv (min-max pv ((if max?

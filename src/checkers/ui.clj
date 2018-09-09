@@ -193,8 +193,10 @@
   (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))
 
 (defn winner [read-board]
-  (when (some? read-board)
-        (game-over read-board tie-state tie-limit)))
+  ;returning nil for now, need to fix
+  nil
+  (comment (when (some? read-board)
+       (game-over read-board tie-state tie-limit))))
 
 (defn computer-move! [read-board move-func think-time]
   (let [{nb :read-board ne :new-entry} (move-func read-board)

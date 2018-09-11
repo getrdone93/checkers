@@ -13,31 +13,33 @@
                :else :non-terminal)
      :tie t}))
 
-(defn exec-jump [{from :from to :to :as move-form} jumped-chk read-board]
-     (let [{mb :read-board ne :new-entry} (move-checker move-form (remove-checker jumped-chk read-board))]
+(defn exec-jump [{from :from to :to jumped-chk :jumped-chk} read-board]
+     (let [{mb :read-board ne :new-entry} (move-checker {:from from :to to} (remove-checker jumped-chk read-board))]
        ((king-me ne mb) :board)))
 
-(defn dfs [ajp ajp-i read-board res]
-  ((fn [jps ajp-ind b curr-ns r]
+(defn dfs-over-ajp [ajp ajp-i read-board res cmp]
+  ((fn [jps ajp-ind b curr-ns r mp]
      (let [{p :path cns :next} (jps ajp-ind)
            [sci _] (last p)
            nji (first (difference cns curr-ns))]
        (if (nil? nji)
          (if (empty? cns)
-           (conj r b)
+           (conj r {:board b :action mp})
            r)
          (let [{[jc [mci _] :as nep] :path nens :next} (jps nji)
                board-sc [sci (b sci)]
                board-mc [mci (b mci)]
-               nb (exec-jump {:from board-sc :to board-mc} jc b)]
-          (recur jps ajp-ind b (conj curr-ns nji) (into r (dfs jps nji nb r))))))) ajp ajp-i read-board #{} res))
+               mv {:from board-sc :to board-mc :jumped-chk jc}
+               nb (exec-jump mv b)]
+          (recur jps ajp-ind b (conj curr-ns nji)
+                 (into r (dfs-over-ajp jps nji nb r (conj mp mv))) mp))))) ajp ajp-i read-board #{} res cmp))
 
 (defn take-action
-  ([read-board sc simple-paths] (mapv (fn [mv] 
-                                        (let [{rb :read-board ne :new-entry}
-                                              (move-checker {:from sc :to mv} read-board)]
-                                          ((king-me ne rb) :board))) simple-paths))
-  ([read-board all-jump-paths] (dfs all-jump-paths 0 read-board [])))
+  ([read-board sc sps] (mapv (fn [mv] 
+                               (let [{rb :read-board ne :new-entry}
+                                     (move-checker {:from sc :to mv} read-board)]
+                                 {:board ((king-me ne rb) :board) :action [{:from sc :to mv}]})) sps))
+  ([read-board ajp] (dfs-over-ajp ajp 0 read-board [] [])))
 
 (defn next-states [state tm] (mapv (fn [[chk mv]]
                                      (cond 
@@ -51,18 +53,21 @@
 (def calls (atom 0))
 (def max-depth 5)
 
+(defn log-output [d su]
+  (do
+    (swap! calls inc)
+    (if (= (mod @calls 5000) 0)
+      (println "calls " @calls " depth " d " su " su))))
+
 (defn general-search [state alpha beta ot min-max tie d]
   (let [{su :utility t :tie} (evaluate team ot state tie)
         max? (= min-max max)]
-    (do
-      (swap! calls inc)
-      (if (= (mod @calls 5000) 0)
-        (println "calls " @calls " depth " d " su " su)))
+    (log-output d su)
     (if (or (contains? #{1 -1 0} su) (>= d max-depth))
       {:state state :value (if (= su :non-terminal)
                              (rand 1)
                              su)}
-      ((fn [[s :as poss-states] pv a b]
+      ((fn [[{s :board} :as poss-states] pv a b]
          (if (some? s)
            (let [nv (min-max pv ((if max?
                                    (general-search s a b ot min t (inc d))
@@ -74,9 +79,9 @@
                (if max?
                  (recur (rest poss-states) nv (max a nv) b)
                  (recur (rest poss-states) nv a (min b nv)))))
-           {:value pv})) (next-states-flat state team) (if max?
+           {:state state :value pv})) (next-states-flat state team) (if max?
                                                          Double/NEGATIVE_INFINITY
                                                          Double/POSITIVE_INFINITY) alpha beta))))
 (defn alpha-beta-search [state]
-  (general-search state Double/NEGATIVE_INFINITY Double/POSITIVE_INFINITY :team2 max {:board [] :team-counts #{} :times 0}
-                  0))
+  (general-search state Double/NEGATIVE_INFINITY Double/POSITIVE_INFINITY :team2
+                  max {:board [] :team-counts #{} :times 0} 0))

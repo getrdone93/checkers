@@ -1,7 +1,7 @@
 (ns checkers.random-player
   (:refer checkers.board))
 
-(def team :team1)
+(def r-team :team1)
 (def think-time-ms 600)
 
 
@@ -10,7 +10,7 @@
 
 (defn rand-chk-move [read-board] 
   (let [[checker {sps :simple-paths ajp :all-jump-paths}] 
-        (first (shuffle (movable-checkers team read-board)))]
+        (first (shuffle (movable-checkers r-team read-board)))]
     (cond
       (some? ajp) (let [{p :path} (random-jump ajp)]
                     (move-checker {:from checker :to (last p)} (remove-checker (first p) read-board)))

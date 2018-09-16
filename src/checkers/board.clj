@@ -284,3 +284,21 @@
                                                          (or (zero? chk-t1) (zero? mv-t1)) :team2
                                                          (or (zero? chk-t2) (zero? mv-t2)) :team1)
                                       :tie t}))))
+
+(defn exec-jump [{from :from to :to jumped-chk :jumped-chk} read-board]
+     (let [{mb :read-board ne :new-entry} (move-checker {:from from :to to} (remove-checker jumped-chk read-board))]
+       ((king-me ne mb) :board)))
+
+(defn exec-multiple-jumps [[j :as jumps] read-board]
+  (if (some? j)
+    (exec-multiple-jumps (rest jumps) (exec-jump j read-board))
+    read-board))
+
+(defn invoke-action [[{jc :jumped-chk} :as action] read-board]
+  (if (some? jc)
+    (exec-multiple-jumps action read-board)
+    ((move-checker (first action) read-board) :read-board)))
+
+(defn clear-repl []
+  (map #(ns-unmap *ns* %) (keys (ns-interns *ns*))))
+

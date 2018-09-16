@@ -2,7 +2,7 @@
   (:refer checkers.board)
   (:refer clojure.set))
 
-(def team :team1)
+(def mm-team :team1)
 
 (defn evaluate [win-team other-team read-board tie]
   (let [{over :board-result t :tie} (game-over read-board tie)]
@@ -12,10 +12,6 @@
                (= over :tie) 0
                :else :non-terminal)
      :tie t}))
-
-(defn exec-jump [{from :from to :to jumped-chk :jumped-chk} read-board]
-     (let [{mb :read-board ne :new-entry} (move-checker {:from from :to to} (remove-checker jumped-chk read-board))]
-       ((king-me ne mb) :board)))
 
 (defn dfs-over-ajp [ajp ajp-i read-board res cmp]
   ((fn [jps ajp-ind b curr-ns r mp]
@@ -60,7 +56,7 @@
       (println "calls " @calls " depth " d " su " su))))
 
 (defn general-search [state alpha beta ot min-max tie d]
-  (let [{su :utility t :tie} (evaluate team ot state tie)
+  (let [{su :utility t :tie} (evaluate mm-team ot state tie)
         max? (= min-max max)]
     (log-output d su)
     (if (or (contains? #{1 -1 0} su) (>= d max-depth))
@@ -80,9 +76,14 @@
                (if max?
                  (recur (rest poss-states) (conj sa {:action act :value nv}) nv (max a nv) b)
                  (recur (rest poss-states) (conj sa {:action act :value nv}) nv a (min b nv)))))
-           {:state state :value pv :acts sa})) (next-states-flat state team) [] (if max?
+           {:state state :value pv :acts sa})) (next-states-flat state mm-team) [] (if max?
                                                                          Double/NEGATIVE_INFINITY
                                                                          Double/POSITIVE_INFINITY) alpha beta))))
+
 (defn alpha-beta-search [state]
   (general-search state Double/NEGATIVE_INFINITY Double/POSITIVE_INFINITY :team2
                   max {:board [] :team-counts #{} :times 0} 0))
+
+(defn max-abs [state]
+  (let [abs (alpha-beta-search state)]
+    ((first (filter #(= (abs :value) (% :value)) (abs :acts))) :action)))

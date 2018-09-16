@@ -2,6 +2,7 @@
 (ns checkers.ui
   (:refer checkers.board)
   (:refer checkers.random-player)
+  (:refer checkers.min-max-player)
   (:refer clojure.set))
 
 (import 
@@ -38,7 +39,6 @@
                    (.setColor im-graph cyan)
                    (.fillOval im-graph (king-shift chkx) (king-shift chky) king-dim king-dim)))
              (draw-board im-graph (rest eles))))
-
 
 (defn color-frame [g read-board]
   (let [img (new BufferedImage (* scale dim) (* scale dim) (. BufferedImage TYPE_INT_ARGB))
@@ -209,6 +209,15 @@
            (reset! board kb)
            (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))))))
 
+(defn new-computer-move! [read-board]
+  (let [mb (invoke-action (max-abs read-board) read-board)
+        w (winner read-board)]
+    (if (some? w)
+      (reset-game! w)
+      (do
+        (reset! board mb)
+        (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))))))
+
 (def ml (proxy [MouseAdapter] []
           (mouseClicked [mouse-event] 
             (let [read-board (get-board)
@@ -250,7 +259,7 @@
         (let [w (winner @board)] 
           (if (some? w)
             (reset-game! w)
-             (comment (computer-move! @board rand-chk-move 400)))))))
+            (new-computer-move! @board))))))
 
 (def submit-button
   (let [sb (new JButton "SUBMIT MOVE")

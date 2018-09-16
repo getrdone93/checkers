@@ -67,21 +67,22 @@
       {:state state :value (if (= su :non-terminal)
                              (rand 1)
                              su)}
-      ((fn [[{s :board} :as poss-states] pv a b]
+      ((fn [[{s :board act :action} :as poss-states] sa pv a b]
          (if (some? s)
-           (let [nv (min-max pv ((if max?
-                                   (general-search s a b ot min t (inc d))
-                                   (general-search s a b ot max t (inc d))) :value))]
+           (let [tv ((if max?
+                       (general-search s a b ot min t (inc d))
+                       (general-search s a b ot max t (inc d))) :value)
+                 nv (min-max pv tv)]
              (if (if max?
                    (>= nv b)
                    (<= nv a))
-               {:state s :value nv}
+               {:state s :value nv :acts (conj sa {:action act :value nv})}
                (if max?
-                 (recur (rest poss-states) nv (max a nv) b)
-                 (recur (rest poss-states) nv a (min b nv)))))
-           {:state state :value pv})) (next-states-flat state team) (if max?
-                                                         Double/NEGATIVE_INFINITY
-                                                         Double/POSITIVE_INFINITY) alpha beta))))
+                 (recur (rest poss-states) (conj sa {:action act :value nv}) nv (max a nv) b)
+                 (recur (rest poss-states) (conj sa {:action act :value nv}) nv a (min b nv)))))
+           {:state state :value pv :acts sa})) (next-states-flat state team) [] (if max?
+                                                                         Double/NEGATIVE_INFINITY
+                                                                         Double/POSITIVE_INFINITY) alpha beta))))
 (defn alpha-beta-search [state]
   (general-search state Double/NEGATIVE_INFINITY Double/POSITIVE_INFINITY :team2
                   max {:board [] :team-counts #{} :times 0} 0))

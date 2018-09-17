@@ -118,8 +118,7 @@
                                                                    (set p)) ajp)))) 0)))
 
 (defn exec-simple-move! [hlc hlsqs read-board]
-  (let [{mb :board ne :entry} (move-checker {:from hlc :to (first hlsqs)} read-board)
-        {kb :board ke :entry} (king-me ne mb)]
+  (let [{kb :board ke :entry} (king-me (move-checker {:from hlc :to (first hlsqs)} read-board))]
         (reset! board (unclick-squares [ke] kb))
         (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))
         @board))
@@ -132,9 +131,8 @@
                                         entry)) ajp)]
       ((fn traverse [[{p :path} :as mp] c rb]
          (if (some? p)
-           (let [{mb :board ne :entry} (move-checker {:from c :to (last p)} 
-                                                        (remove-checker (first p) rb))
-                 {kb :board [kei ke] :entry} (king-me ne mb) 
+           (let [{kb :board [kei ke] :entry} (king-me (move-checker {:from c :to (last p)} 
+                                                        (remove-checker (first p) rb))) 
                  nb (unclick-squares [[kei ke]] kb)]
              (reset! board nb)
              (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))
@@ -198,16 +196,16 @@
   (comment (when (some? read-board)
        (game-over read-board tie-state tie-limit))))
 
-(defn computer-move! [read-board move-func think-time]
-  (let [{nb :read-board ne :new-entry} (move-func read-board)
-        {kb :board ke :entry} (king-me ne nb)]
-    (Thread/sleep think-time) ;"think" for a bit
-     (let [w (winner read-board)] 
-       (if (some? w)
-         (reset-game! w)
-         (do 
-           (reset! board kb)
-           (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))))))
+;; (defn computer-move! [read-board move-func think-time]
+;;   (let [{nb :read-board ne :new-entry} (move-func read-board)
+;;         {kb :board ke :entry} (king-me ne nb)]
+;;     (Thread/sleep think-time) ;"think" for a bit
+;;      (let [w (winner read-board)] 
+;;        (if (some? w)
+;;          (reset-game! w)
+;;          (do 
+;;            (reset! board kb)
+;;            (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight)))))))))
 
 (defn new-computer-move! [read-board]
   (let [mb (invoke-action (max-abs read-board) read-board)

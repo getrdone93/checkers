@@ -31,10 +31,9 @@
                  (into r (dfs-over-ajp jps nji nb r (conj mp mv))) mp))))) ajp ajp-i read-board #{} res cmp))
 
 (defn take-action
-  ([read-board sc sps] (mapv (fn [mv] 
-                               (let [{rb :board ne :entry}
-                                     (move-checker {:from sc :to mv} read-board)]
-                                 {:board ((king-me ne rb) :board) :action [{:from sc :to mv}]})) sps))
+  ([read-board sc sps] (mapv (fn [mv]
+                               {:board ((king-me (move-checker {:from sc :to mv} read-board)) :board)
+                                :action [{:from sc :to mv}]}) sps))
   ([read-board ajp] (dfs-over-ajp ajp 0 read-board [] [])))
 
 (defn next-states [state tm] (mapv (fn [[chk mv]]

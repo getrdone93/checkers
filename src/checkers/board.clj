@@ -58,11 +58,10 @@
                                                              :king false})})) 
                     br)))
 
-;think about having this taking a map {:entry entry :board board}
-;for better composition
-(defn king-me [[ind {chk :checker
-                   {[team _] :team
-                    king :king} :checker :as entry}] read-board] 
+(defn king-me [{[ind {chk :checker
+                        {[team _] :team
+                         king :king} :checker :as entry}] :entry
+                         read-board :board}] 
   (if (and (false? king) (contains? (king-ind team) ind))
     (let [nc (assoc entry :checker (assoc chk :king true))
           nb (assoc read-board ind nc)]
@@ -286,8 +285,7 @@
                                       :tie t}))))
 
 (defn exec-jump [{from :from to :to jumped-chk :jumped-chk} read-board]
-     (let [{mb :board ne :entry} (move-checker {:from from :to to} (remove-checker jumped-chk read-board))]
-       ((king-me ne mb) :board)))
+  ((king-me (move-checker {:from from :to to} (remove-checker jumped-chk read-board))) :board))
 
 (defn exec-multiple-jumps [[j :as jumps] read-board]
   (if (some? j)

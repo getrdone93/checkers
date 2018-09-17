@@ -118,7 +118,7 @@
                                                                    (set p)) ajp)))) 0)))
 
 (defn exec-simple-move! [hlc hlsqs read-board]
-  (let [{mb :read-board ne :new-entry} (move-checker {:from hlc :to (first hlsqs)} read-board)
+  (let [{mb :board ne :entry} (move-checker {:from hlc :to (first hlsqs)} read-board)
         {kb :board ke :entry} (king-me ne mb)]
         (reset! board (unclick-squares [ke] kb))
         (. panel (paintImmediately 0 0 (. panel (getWidth)) (. panel (getHeight))))
@@ -132,7 +132,7 @@
                                         entry)) ajp)]
       ((fn traverse [[{p :path} :as mp] c rb]
          (if (some? p)
-           (let [{mb :read-board ne :new-entry} (move-checker {:from c :to (last p)} 
+           (let [{mb :board ne :entry} (move-checker {:from c :to (last p)} 
                                                         (remove-checker (first p) rb))
                  {kb :board [kei ke] :entry} (king-me ne mb) 
                  nb (unclick-squares [[kei ke]] kb)]

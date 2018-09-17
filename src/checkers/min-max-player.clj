@@ -32,7 +32,7 @@
 
 (defn take-action
   ([read-board sc sps] (mapv (fn [mv] 
-                               (let [{rb :read-board ne :new-entry}
+                               (let [{rb :board ne :entry}
                                      (move-checker {:from sc :to mv} read-board)]
                                  {:board ((king-me ne rb) :board) :action [{:from sc :to mv}]})) sps))
   ([read-board ajp] (dfs-over-ajp ajp 0 read-board [] [])))

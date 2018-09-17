@@ -155,10 +155,10 @@
                         :team team
                         :checker-obj (new Ellipse2D$Double cpx cpy circ-dim circ-dim))
         sq-entry (assoc square :checker move-chk)]
-    {:read-board (assoc (assoc read-board chk-ind (assoc checker :checker nil)) 
+    {:board (assoc (assoc read-board chk-ind (assoc checker :checker nil)) 
                         sq-ind 
                         sq-entry)
-     :new-entry [sq-ind sq-entry]}))
+     :entry [sq-ind sq-entry]}))
 
 (defn ajp [[chk-ind {chk :checker 
                           {[team _] :team} :checker 
@@ -172,8 +172,8 @@
           nce (assoc (curr-ajp base-ind) :next (conj ((curr-ajp base-ind) :next) ni))
           new-ajp (assoc (conj curr-ajp {:path (first jumps) :next #{}})
                          base-ind nce)
-          {nrb :read-board
-           ne :new-entry} (move-checker {:from entry :to (last (first jumps))} 
+          {nrb :board
+           ne :entry} (move-checker {:from entry :to (last (first jumps))} 
                                         (remove-checker (first (first jumps)) crb))]
       (let [{n-ajp :ajp new-hi :hi} (ajp ne {:ajp new-ajp :bi ni :hi ni :read-board nrb} (jump-paths ne nrb))]
         (ajp entry {:ajp n-ajp :bi base-ind :hi new-hi :read-board crb} (rest jumps))))
@@ -188,7 +188,7 @@
 					                 temp-ajp (conj c-ajp {:path (first jumps) :next #{}})
 					                 nfe (assoc (c-ajp 0) :next (conj ((c-ajp 0) :next) ni))
 					                 n-ajp (assoc temp-ajp 0 nfe)
-					                 {nrb :read-board ne :new-entry} (move-checker {:from checker :to (last (first jumps))} 
+					                 {nrb :board ne :entry} (move-checker {:from checker :to (last (first jumps))} 
 					                                                               (remove-checker (first (first jumps)) crb))
 					                 {ajp-res :ajp nrb :read-board hi :hi} (ajp ne {:ajp n-ajp :read-board nrb :hi ni :bi ni} 
 					                                                            (jump-paths ne nrb))]
@@ -286,7 +286,7 @@
                                       :tie t}))))
 
 (defn exec-jump [{from :from to :to jumped-chk :jumped-chk} read-board]
-     (let [{mb :read-board ne :new-entry} (move-checker {:from from :to to} (remove-checker jumped-chk read-board))]
+     (let [{mb :board ne :entry} (move-checker {:from from :to to} (remove-checker jumped-chk read-board))]
        ((king-me ne mb) :board)))
 
 (defn exec-multiple-jumps [[j :as jumps] read-board]
@@ -297,7 +297,7 @@
 (defn invoke-action [[{jc :jumped-chk} :as action] read-board]
   (if (some? jc)
     (exec-multiple-jumps action read-board)
-    ((move-checker (first action) read-board) :read-board)))
+    ((move-checker (first action) read-board) :board)))
 
 (defn clear-repl []
   (map #(ns-unmap *ns* %) (keys (ns-interns *ns*))))

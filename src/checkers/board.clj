@@ -295,7 +295,7 @@
 (defn invoke-action [[{jc :jumped-chk} :as action] read-board]
   (if (some? jc)
     (exec-multiple-jumps action read-board)
-    ((move-checker (first action) read-board) :board)))
+    ((king-me (move-checker (first action) read-board)) :board)))
 
 (defn clear-repl []
   (map #(ns-unmap *ns* %) (keys (ns-interns *ns*))))

@@ -46,7 +46,7 @@
   (reduce #(into %1 %2) (next-states state tm)))
 
 (def calls (atom 0))
-(def max-depth Long/MAX_VALUE)
+(def max-depth 6)
 
 (defn log-output [d su]
   (do
@@ -56,14 +56,17 @@
 
 (def flip-team {:team1 :team2 :team2 :team1})
 
+(def max-reached (atom 0))
+
 (defn general-search [state alpha beta ot min-max tie d team]
   (let [{su :utility t :tie} (evaluate mm-team ot state tie)
         max? (= min-max max)]
-;    (log-output d su)
+    (log-output d su)
     (if (or (contains? #{1 -1 0} su) (>= d max-depth))
       (do
-         (println "terminal state reached, depth: " d)
         (def l-state state)
+        (comment (when (not= @max-reached (swap! max-reached #(max % d)))
+             (println "new highest depth: " @max-reached)))
         {:state state :value (if (= su :non-terminal)
                              (rand 1)
                              su)})

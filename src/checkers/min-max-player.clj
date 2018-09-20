@@ -46,7 +46,7 @@
   (reduce #(into %1 %2) (next-states state tm)))
 
 (def calls (atom 0))
-(def max-depth 5)
+(def max-depth Long/MAX_VALUE)
 
 (defn log-output [d su]
   (do
@@ -54,34 +54,39 @@
     (if (= (mod @calls 5000) 0)
       (println "calls " @calls " depth " d " su " su))))
 
-(defn general-search [state alpha beta ot min-max tie d]
+(def flip-team {:team1 :team2 :team2 :team1})
+
+(defn general-search [state alpha beta ot min-max tie d team]
   (let [{su :utility t :tie} (evaluate mm-team ot state tie)
         max? (= min-max max)]
-    (log-output d su)
+;    (log-output d su)
     (if (or (contains? #{1 -1 0} su) (>= d max-depth))
-      {:state state :value (if (= su :non-terminal)
+      (do
+         (println "terminal state reached, depth: " d)
+        (def l-state state)
+        {:state state :value (if (= su :non-terminal)
                              (rand 1)
-                             su)}
-      ((fn [[{s :board act :action} :as poss-states] sa pv a b]
+                             su)})
+      ((fn [[{s :board act :action} :as poss-states] sa pv a b tm]
          (if (some? s)
            (let [tv ((if max?
-                       (general-search s a b ot min t (inc d))
-                       (general-search s a b ot max t (inc d))) :value)
+                       (general-search s a b ot min t (inc d) (flip-team tm))
+                       (general-search s a b ot max t (inc d) (flip-team tm))) :value)
                  nv (min-max pv tv)]
              (if (if max?
                    (>= nv b)
                    (<= nv a))
                {:state s :value nv :acts (conj sa {:action act :value nv})}
                (if max?
-                 (recur (rest poss-states) (conj sa {:action act :value nv}) nv (max a nv) b)
-                 (recur (rest poss-states) (conj sa {:action act :value nv}) nv a (min b nv)))))
-           {:state state :value pv :acts sa})) (next-states-flat state mm-team) [] (if max?
+                 (recur (rest poss-states) (conj sa {:action act :value nv}) nv (max a nv) b tm)
+                 (recur (rest poss-states) (conj sa {:action act :value nv}) nv a (min b nv) tm))))
+           {:state state :value pv :acts sa})) (next-states-flat state team) [] (if max?
                                                                          Double/NEGATIVE_INFINITY
-                                                                         Double/POSITIVE_INFINITY) alpha beta))))
+                                                                         Double/POSITIVE_INFINITY) alpha beta team))))
 
 (defn alpha-beta-search [state]
   (general-search state Double/NEGATIVE_INFINITY Double/POSITIVE_INFINITY :team2
-                  max {:board [] :team-counts #{} :times 0} 0))
+                  max {:board [] :team-counts #{} :times 0} 0 mm-team))
 
 (defn max-abs [state]
   (let [abs (alpha-beta-search state)]

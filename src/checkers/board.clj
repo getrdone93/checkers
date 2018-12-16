@@ -72,7 +72,7 @@
                 :team1 [(fn [ind] (+ ind 9)) (fn [ind] (+ ind 7))]})
 
 (def all-move-funcs 
-  (flatten (map move-func (keys move-func))))
+  (flatten (vals move-func)))
 
 (defn valid-index? [ind] 
   (and (< 0 ind) (< ind num-squares)))

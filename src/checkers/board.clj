@@ -25,6 +25,39 @@
 
 (defn checker-point [sqx sqy] [(+ sqx shift) (+ sqy shift)])
 
+(defn gen-board-new [n br]
+  (let [place (mod n 8)
+        r (quot n 8)
+        x (* place scale)
+        y (* r scale)
+        c (if (even? r)
+            (if (even? n)
+              red
+              black)
+            (if (even? n)
+              black
+              red))
+        cp (checker-point x y)]
+    (if (< n num-squares)
+      (let [sq {:square {:point [x y]
+                         :color c
+                         :valid-click-locs []
+                         :square-obj (new Rectangle2D$Double x y scale scale)
+                         :clicked false}}]
+        (recur (inc n) (conj br (if (and (contains? checker-rows r) (= c black))
+                                      (conj sq {:checker 
+                                                {:point cp
+                                                 :team (if (contains? t1-rows r)
+                                                         [:team1 yellow]
+                                                         [:team2 magenta]) 
+                                                 :valid-click-locs []
+                                                 :checker-obj (new Ellipse2D$Double (first cp) 
+                                                                   (second cp) circ-dim circ-dim)
+                                                 :clicked false
+                                                 :king false}})
+                                      sq)))) 
+      br)))
+
 (defn gen-board [n br]
                 (let [place (mod n 8)
                       r (quot n 8)
